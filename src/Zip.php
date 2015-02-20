@@ -2,6 +2,15 @@
 
 namespace splitbrain\PHPArchive;
 
+/**
+ * Class Zip
+ *
+ * Creates or extracts Zip archives
+ *
+ * @author  Andreas Gohr <andi@splitbrain.org>
+ * @package splitbrain\PHPArchive
+ * @license MIT
+ */
 class Zip
 {
 

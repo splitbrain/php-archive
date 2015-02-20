@@ -3,49 +3,15 @@
 namespace splitbrain\PHPArchive;
 
 /**
- * This class allows the extraction of existing and the creation of new Unix TAR archives.
- * To keep things simple, the modification of existing archives is not supported. It handles
- * uncompressed, gzip and bzip2 compressed tar files.
+ * Class Tar
+ *
+ * Creates or extracts Tar archives. Supports gz and bzip compression
  *
  * Long pathnames (>100 chars) are supported in POSIX ustar and GNU longlink formats.
  *
- * To list the contents of an existing TAR archive, open() it and use contents() on it:
- *
- *     $tar = new Tar();
- *     $tar->open('myfile.tgz');
- *     $toc = $tar->contents();
- *     print_r($toc);
- *
- * To extract the contents of an existing TAR archive, open() it and use extract() on it:
- *
- *     $tar = new Tar();
- *     $tar->open('myfile.tgz');
- *     $tar->extract('/tmp');
- *
- * To create a new TAR archive directly on the filesystem (low memory requirements), create() it,
- * add*() files and close() it:
- *
- *      $tar = new Tar();
- *      $tar->create('myfile.tgz');
- *      $tar->addFile(...);
- *      $tar->addData(...);
- *      ...
- *      $tar->close();
- *
- * To create a TAR archive directly in memory, create() it, add*() files and then either save()
- * or getData() it:
- *
- *      $tar = new Tar();
- *      $tar->create();
- *      $tar->addFile(...);
- *      $tar->addData(...);
- *      ...
- *      $tar->save('myfile.tgz'); // compresses and saves it
- *      echo $tar->getArchive(Archive::COMPRESS_GZIP); // compresses and returns it
- *
  * @author  Andreas Gohr <andi@splitbrain.org>
- * @author  Bouchon <tarlib@bouchon.org> (Maxg)
- * @license GPL 2
+ * @package splitbrain\PHPArchive
+ * @license MIT
  */
 class Tar extends Archive
 {
