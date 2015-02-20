@@ -268,7 +268,7 @@ class Tar extends Archive
      */
     public function addFile($file, $fileinfo = '')
     {
-        if (!is_a($fileinfo, 'FileInfo')) {
+        if (is_string($fileinfo)) {
             $fileinfo = FileInfo::fromPath($file, $fileinfo);
         }
 
@@ -308,7 +308,7 @@ class Tar extends Archive
      */
     public function addData($fileinfo, $data)
     {
-        if (!is_a($fileinfo, 'FileInfo')) {
+        if (is_string($fileinfo)) {
             $fileinfo = new FileInfo($fileinfo);
         }
 

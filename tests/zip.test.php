@@ -2,7 +2,8 @@
 
 use splitbrain\PHPArchive\Zip;
 
-class Zip_TestCase extends PHPUnit_Framework_TestCase {
+class Zip_TestCase extends PHPUnit_Framework_TestCase
+{
 
     /**
      * simple test that checks that the given filenames and contents can be grepped from
@@ -10,7 +11,8 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
      *
      * No check for format correctness
      */
-    public function test_createdynamic() {
+    public function test_createdynamic()
+    {
         $zip = new Zip();
 
         $dir  = dirname(__FILE__).'/zip';
@@ -47,7 +49,8 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
      *
      * No check for format correctness
      */
-    public function test_createfile() {
+    public function test_createfile()
+    {
         $zip = new Zip();
 
         $dir  = dirname(__FILE__).'/zip';
@@ -86,7 +89,8 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
     /**
      * List the contents of the prebuilt ZIP file
      */
-    public function test_zipcontent() {
+    public function test_zipcontent()
+    {
         $dir = dirname(__FILE__).'/zip';
 
         $zip  = new Zip();
@@ -96,17 +100,18 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
         $content = $zip->contents();
 
         $this->assertCount(4, $content, "Contents of $file");
-        $this->assertEquals('zip/testdata1.txt', $content[1]['filename'], "Contents of $file");
-        $this->assertEquals(13, $content[1]['size'], "Contents of $file");
+        $this->assertEquals('zip/testdata1.txt', $content[1]->getPath(), "Contents of $file");
+        $this->assertEquals(13, $content[1]->getSize(), "Contents of $file");
 
-        $this->assertEquals('zip/foobar/testdata2.txt', $content[3]['filename'], "Contents of $file");
-        $this->assertEquals(13, $content[1]['size'], "Contents of $file");
+        $this->assertEquals('zip/foobar/testdata2.txt', $content[3]->getPath(), "Contents of $file");
+        $this->assertEquals(13, $content[3]->getSize(), "Contents of $file");
     }
 
     /**
      * Extract the prebuilt zip files
      */
-    public function test_zipextract() {
+    public function test_zipextract()
+    {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
 
@@ -124,13 +129,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
         $this->assertFileExists($out.'/zip/foobar/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/zip/foobar/testdata2.txt'), "Extracted $file");
 
-        //TestUtils::rdelete($out);
+        self::rdelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with component stripping
      */
-    public function test_compstripextract() {
+    public function test_compstripextract()
+    {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
 
@@ -148,13 +154,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
         $this->assertFileExists($out.'/foobar/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/foobar/testdata2.txt'), "Extracted $file");
 
-        TestUtils::rdelete($out);
+        self::rdelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with prefix stripping
      */
-    public function test_prefixstripextract() {
+    public function test_prefixstripextract()
+    {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
 
@@ -172,14 +179,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
         $this->assertFileExists($out.'/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/testdata2.txt'), "Extracted $file");
 
-        TestUtils::rdelete($out);
-
+        self::rdelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with include regex
      */
-    public function test_includeextract() {
+    public function test_includeextract()
+    {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
 
@@ -196,13 +203,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
         $this->assertFileExists($out.'/zip/foobar/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/zip/foobar/testdata2.txt'), "Extracted $file");
 
-        TestUtils::rdelete($out);
+        self::rdelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with exclude regex
      */
-    public function test_excludeextract() {
+    public function test_excludeextract()
+    {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
 
@@ -219,180 +227,30 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase {
 
         $this->assertFileNotExists($out.'/zip/foobar/testdata2.txt', "Extracted $file");
 
-        TestUtils::rdelete($out);
-
+        self::rdelete($out);
     }
 
     /**
-     * @depends test_ext_zlib
+     * recursive rmdir()/unlink()
+     *
+     * @static
+     * @param $target string
      */
-    /*public function test_longpathextract() {
-        $dir = dirname(__FILE__).'/zip';
-        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
-
-        foreach(array('uszip', 'gnu') as $format) {
-            $zip = new Zip();
-            $zip->open("$dir/longpath-$format.tgz");
-            $zip->extract($out);
-
-            $this->assertFileExists($out.'/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/test.txt');
-
-            TestUtils::rdelete($out);
-        }
-    }*/
-
-    // FS#1442
-    /*public function test_createlongfile() {
-        $zip = new Zip();
-        $tmp = tempnam(sys_get_temp_dir(), 'dwziptest');
-
-        $path = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789.txt';
-
-        $zip->create($tmp, Zip::COMPRESS_NONE);
-        $zip->addData($path, 'testcontent1');
-        $zip->close();
-
-        $this->assertTrue(filesize($tmp) > 30); //arbitrary non-zero number
-        $data = file_get_contents($tmp);
-
-        // We should find the complete path and a longlink entry
-        $this->assertTrue(strpos($data, 'testcontent1') !== false, 'content in ZIP');
-        $this->assertTrue(strpos($data, $path) !== false, 'path in ZIP');
-        $this->assertTrue(strpos($data, '@LongLink') !== false, '@LongLink in ZIP');
-
-        @unlink($tmp);
-    }*/
-
-    /*public function test_createlongpathuszip() {
-        $zip = new Zip();
-        $tmp = tempnam(sys_get_temp_dir(), 'dwziptest');
-
-        $path = '';
-        for($i=0; $i<11; $i++) $path .= '1234567890/';
-        $path = rtrim($path,'/');
-
-        $zip->create($tmp, Zip::COMPRESS_NONE);
-        $zip->addData("$path/test.txt", 'testcontent1');
-        $zip->close();
-
-        $this->assertTrue(filesize($tmp) > 30); //arbitrary non-zero number
-        $data = file_get_contents($tmp);
-
-        // We should find the path and filename separated, no longlink entry
-        $this->assertTrue(strpos($data, 'testcontent1') !== false, 'content in ZIP');
-        $this->assertTrue(strpos($data, 'test.txt') !== false, 'filename in ZIP');
-        $this->assertTrue(strpos($data, $path) !== false, 'path in ZIP');
-        $this->assertFalse(strpos($data, "$path/test.txt") !== false, 'full filename in ZIP');
-        $this->assertFalse(strpos($data, '@LongLink') !== false, '@LongLink in ZIP');
-
-        @unlink($tmp);
-    }*/
-
-    /*public function test_createlongpathgnu() {
-        $zip = new Zip();
-        $tmp = tempnam(sys_get_temp_dir(), 'dwziptest');
-
-        $path = '';
-        for($i=0; $i<20; $i++) $path .= '1234567890/';
-        $path = rtrim($path,'/');
-
-        $zip->create($tmp, Zip::COMPRESS_NONE);
-        $zip->addData("$path/test.txt", 'testcontent1');
-        $zip->close();
-
-        $this->assertTrue(filesize($tmp) > 30); //arbitrary non-zero number
-        $data = file_get_contents($tmp);
-
-        // We should find the complete path/filename and a longlink entry
-        $this->assertTrue(strpos($data, 'testcontent1') !== false, 'content in ZIP');
-        $this->assertTrue(strpos($data, 'test.txt') !== false, 'filename in ZIP');
-        $this->assertTrue(strpos($data, $path) !== false, 'path in ZIP');
-        $this->assertTrue(strpos($data, "$path/test.txt") !== false, 'full filename in ZIP');
-        $this->assertTrue(strpos($data, '@LongLink') !== false, '@LongLink in ZIP');
-
-        @unlink($tmp);
-    }*/
-
-    /**
-     * Extract a zipbomomb
-     * @depends test_ext_zlib
-     */
-    /*public function test_zipbomb() {
-        $dir = dirname(__FILE__).'/zip';
-        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
-
-        $zip  = new Zip();
-
-        $zip->open("$dir/zipbomb.tgz");
-        $zip->extract($out);
-
-        clearstatcache();
-
-        $this->assertFileExists($out.'/AAAAAAAAAAAAAAAAA/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.txt');
-
-        TestUtils::rdelete($out);
-    }*/
-
-    /**
-     * A single zero file should be just a header block + the footer
-     */
-    /*public function test_zerofile(){
-        $dir = dirname(__FILE__).'/zip';
-        $zip = new Zip();
-        $zip->create();
-        $zip->addFile("$dir/zero.txt", 'zero.txt');
-        $file = $zip->getArchive(Zip::COMPRESS_NONE);
-
-        $this->assertEquals(512*3, strlen($file)); // 1 header block + 2 footer blocks
-    }*/
-
-    /*public function test_zerodata(){
-        $zip = new Zip();
-        $zip->create();
-        $zip->addData('zero.txt','');
-        $file = $zip->getArchive(Zip::COMPRESS_NONE);
-
-        $this->assertEquals(512*3, strlen($file)); // 1 header block + 2 footer blocks
-    }*/
-
-    /**
-     * A file of exactly one block should be just a header block + data block + the footer
-     */
-    /*public function test_blockfile(){
-        $dir = dirname(__FILE__).'/zip';
-        $zip = new Zip();
-        $zip->create();
-        $zip->addFile("$dir/block.txt", 'block.txt');
-        $file = $zip->getArchive(Zip::COMPRESS_NONE);
-
-        $this->assertEquals(512*4, strlen($file)); // 1 header block + data block + 2 footer blocks
-    }*/
-
-    /*public function test_blockdata(){
-        $zip = new Zip();
-        $zip->create();
-        $zip->addData('block.txt', str_pad('', 512, 'x'));
-        $file = $zip->getArchive(Zip::COMPRESS_NONE);
-
-        $this->assertEquals(512*4, strlen($file)); // 1 header block + data block + 2 footer blocks
-    }*/
-
-    public function test_cleanPath() {
-        $zip   = new Zip();
-        $tests = array(
-            '/foo/bar'                => 'foo/bar',
-            '/foo/bar/'               => 'foo/bar',
-            'foo//bar'                => 'foo/bar',
-            'foo/0/bar'               => 'foo/0/bar',
-            'foo/../bar'              => 'bar',
-            'foo/bang/bang/../../bar' => 'foo/bar',
-            'foo/../../bar'           => 'bar',
-            'foo/.././../bar'         => 'bar',
-            'foo\..\./../bar'         => 'bar'
-        );
-
-        foreach($tests as $in => $out) {
-            $this->assertEquals($out, $zip->cleanPath($in), "Input: $in");
+    public static function rdelete($target)
+    {
+        if (!is_dir($target)) {
+            unlink($target);
+        } else {
+            $dh = dir($target);
+            while (false !== ($entry = $dh->read())) {
+                if ($entry == '.' || $entry == '..') {
+                    continue;
+                }
+                self::rdelete("$target/$entry");
+            }
+            $dh->close();
+            rmdir($target);
         }
     }
+
 }

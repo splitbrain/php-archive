@@ -89,7 +89,7 @@ class Zip
         }
 
         $outdir = rtrim($outdir, '/');
-        mkdir($outdir, 0777, true);
+        @mkdir($outdir, 0777, true);
 
         $extracted = array();
 
@@ -117,9 +117,9 @@ class Zip
             $extracted[] = $fileinfo;
 
             // create output directory
-            $output    = '$outdir/'.$fileinfo->getPath();
+            $output    = $outdir.'/'.$fileinfo->getPath();
             $directory = ($header['folder']) ? $output : dirname($output);
-            mkdir($directory, 0777, true);
+            @mkdir($directory, 0777, true);
 
             // nothing more to do for directories
             if ($fileinfo->getIsdir()) {
@@ -240,7 +240,7 @@ class Zip
      */
     public function addFile($file, $fileinfo, $compress = 9)
     {
-        if (!is_a($fileinfo, 'FileInfo')) {
+        if (is_string($fileinfo)) {
             $fileinfo = FileInfo::fromPath($file, $fileinfo);
         }
 
@@ -267,7 +267,7 @@ class Zip
      */
     public function addData($fileinfo, $data, $compress = 9)
     {
-        if (!is_a($fileinfo, 'FileInfo')) {
+        if (is_string($fileinfo)) {
             $fileinfo = new FileInfo($fileinfo);
         }
 
