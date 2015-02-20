@@ -1,6 +1,8 @@
 <?php
 
-class Zip_TestCase extends DokuWikiTest {
+use splitbrain\PHPArchive\Zip;
+
+class Zip_TestCase extends PHPUnit_Framework_TestCase {
 
     /**
      * simple test that checks that the given filenames and contents can be grepped from

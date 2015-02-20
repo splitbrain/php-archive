@@ -1,6 +1,6 @@
 <?php
 
-namespace Archive;
+namespace splitbrain\PHPArchive;
 
 /**
  * This class allows the extraction of existing and the creation of new Unix TAR archives.
@@ -190,7 +190,7 @@ class Tar extends Archive
             }
 
             // create output directory
-            $output    = '$outdir/'.$fileinfo->getPath();
+            $output    = $outdir.'/'.$fileinfo->getPath();
             $directory = ($fileinfo->getIsdir()) ? $output : dirname($output);
             @mkdir($directory, 0777, true);
 
@@ -470,23 +470,45 @@ class Tar extends Archive
     }
 
     /**
-     * Write a file header
+     * Write the given file metat data as header
      *
      * @param FileInfo $fileinfo
-     * @internal param string $typeflag Set to '5' for directories
      */
     protected function writeFileHeader(FileInfo $fileinfo)
     {
+        $this->writeRawFileHeader(
+            $fileinfo->getPath(),
+            $fileinfo->getUid(),
+            $fileinfo->getGid(),
+            $fileinfo->getMode(),
+            $fileinfo->getSize(),
+            $fileinfo->getMtime(),
+            $fileinfo->getIsdir() ? '5' : '0'
+        );
+    }
+
+    /**
+     * Write a file header to the stream
+     *
+     * @param string $name
+     * @param int    $uid
+     * @param int    $gid
+     * @param int    $perm
+     * @param int    $size
+     * @param int    $mtime
+     * @param string $typeflag Set to '5' for directories
+     */
+    protected function writeRawFileHeader($name, $uid, $gid, $perm, $size, $mtime, $typeflag = '')
+    {
         // handle filename length restrictions
         $prefix  = '';
-        $name    = $fileinfo->getPath();
         $namelen = strlen($name);
         if ($namelen > 100) {
             $file = basename($name);
             $dir  = dirname($name);
             if (strlen($file) > 100 || strlen($dir) > 155) {
                 // we're still too large, let's use GNU longlink
-                $this->writeFileHeader('././@LongLink', 0, 0, 0, $namelen, 0, 'L');
+                $this->writeRawFileHeader('././@LongLink', 0, 0, 0, $namelen, 0, 'L');
                 for ($s = 0; $s < $namelen; $s += 512) {
                     $this->writebytes(pack("a512", substr($name, $s, 512)));
                 }
@@ -499,12 +521,11 @@ class Tar extends Archive
         }
 
         // values are needed in octal
-        $uid      = sprintf("%6s ", decoct($fileinfo->getUid()));
-        $gid      = sprintf("%6s ", decoct($fileinfo->getGid()));
-        $perm     = sprintf("%6s ", decoct($fileinfo->getMode()));
-        $size     = sprintf("%11s ", decoct($fileinfo->getSize()));
-        $mtime    = sprintf("%11s", decoct($fileinfo->getMtime()));
-        $typeflag = $fileinfo->getIsdir() ? '5' : '0';
+        $uid   = sprintf("%6s ", decoct($uid));
+        $gid   = sprintf("%6s ", decoct($gid));
+        $perm  = sprintf("%6s ", decoct($perm));
+        $size  = sprintf("%11s ", decoct($size));
+        $mtime = sprintf("%11s", decoct($mtime));
 
         $data_first = pack("a100a8a8a8a12A12", $name, $perm, $uid, $gid, $size, $mtime);
         $data_last  = pack("a1a100a6a2a32a32a8a8a155a12", $typeflag, '', 'ustar', '', '', '', '', '', $prefix, "");
