@@ -1,5 +1,7 @@
 <?php
 
+namespace Archive;
+
 abstract class Archive
 {
 
@@ -19,7 +21,7 @@ abstract class Archive
      * Open an existing archive file for reading
      *
      * @param string $file
-     * @throws TarIOException
+     * @throws ArchiveIOException
      */
     abstract public function open($file);
 
@@ -30,6 +32,8 @@ abstract class Archive
      *
      * The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
      * Reopen the file with open() again if you want to do additional operations
+     *
+     * @return FileInfo[]
      */
     abstract public function contents();
 
@@ -55,7 +59,7 @@ abstract class Archive
      * @param int|string $strip   either the number of path components or a fixed prefix to strip
      * @param string     $exclude a regular expression of files to exclude
      * @param string     $include a regular expression of files to include
-     * @throws TarIOException
+     * @throws ArchiveIOException
      * @return array
      */
     abstract public function extract($outdir, $strip = '', $exclude = '', $include = '');
@@ -70,23 +74,22 @@ abstract class Archive
     abstract public function create($file = '');
 
     /**
-     * Add a file to the current TAR archive using an existing file in the filesystem
+     * Add a file to the current archive using an existing file in the filesystem
      *
-     * @todo handle directory adding
      * @param string          $file     path to the original file
      * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
-     * @throws TarIOException
+     * @throws ArchiveIOException
      */
     abstract public function addFile($file, $fileinfo = '');
 
     /**
-     * Add a file to the current TAR archive using the given $data as content
+     * Add a file to the current archive using the given $data as content
      *
-     * @param string          $data     binary content of the file to add
      * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data
-     * @return
+     * @param string          $data     binary content of the file to add
+     * @throws ArchiveIOException
      */
-    abstract public function addData($data, $fileinfo);
+    abstract public function addData($fileinfo, $data);
 
     /**
      * Close the archive, close all file handles
@@ -115,8 +118,10 @@ abstract class Archive
 
 }
 
-class ArchiveIOException extends Exception {
+class ArchiveIOException extends \Exception
+{
 }
 
-class ArchiveIllegalCompressionException extends Exception {
+class ArchiveIllegalCompressionException extends \Exception
+{
 }

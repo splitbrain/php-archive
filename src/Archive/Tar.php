@@ -1,5 +1,7 @@
 <?php
 
+namespace Archive;
+
 /**
  * This class allows the extraction of existing and the creation of new Unix TAR archives.
  * To keep things simple, the modification of existing archives is not supported. It handles
@@ -103,23 +105,13 @@ class Tar extends Archive
     /**
      * Read the contents of a TAR archive
      *
-     * This function lists the files stored in the archive, and returns an indexed array of associative
-     * arrays containing for each file the following information:
-     *
-     * checksum    Tar Checksum of the file
-     * filename    The full name of the stored file (up to 100 c.)
-     * mode        UNIX permissions in DECIMAL, not octal
-     * uid         The Owner ID
-     * gid         The Group ID
-     * size        Uncompressed filesize
-     * mtime       Timestamp of last modification
-     * typeflag    Empty for files, set for folders
-     * link        Is it a symlink?
-     * uname       Owner name
-     * gname       Group name
+     * This function lists the files stored in the archive
      *
      * The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
      * Reopen the file with open() again if you want to do additional operations
+     *
+     * @throws ArchiveIOException
+     * @returns FileInfo[]
      */
     public function contents()
     {
@@ -135,7 +127,7 @@ class Tar extends Archive
             }
 
             $this->skipbytes(ceil($header['size'] / 512) * 512);
-            $result[] = $header;
+            $result[] = $this->header2fileinfo($header);
         }
 
         $this->close();
@@ -165,7 +157,7 @@ class Tar extends Archive
      * @param string     $exclude a regular expression of files to exclude
      * @param string     $include a regular expression of files to include
      * @throws ArchiveIOException
-     * @return array
+     * @return FileInfo[]
      */
     public function extract($outdir, $strip = '', $exclude = '', $include = '')
     {
@@ -179,89 +171,52 @@ class Tar extends Archive
             throw new ArchiveIOException("Could not create directory '$outdir'");
         }
 
-        $striplen  = strlen($strip);
         $extracted = array();
-
         while ($dat = $this->readbytes(512)) {
             // read the file header
             $header = $this->parseHeader($dat);
             if (!is_array($header)) {
                 continue;
             }
-            if (!$header['filename']) {
+            $fileinfo = $this->header2fileinfo($header);
+
+            // apply strip rules
+            $fileinfo->strip($strip);
+
+            // skip unwanted files
+            if (!strlen($fileinfo->getPath()) || !$fileinfo->match($include, $exclude)) {
+                $this->skipbytes(ceil($header['size'] / 512) * 512);
                 continue;
             }
 
-            // strip prefix
-            $filename = $this->cleanPath($header['filename']);
-            if (is_int($strip)) {
-                // if $strip is an integer we strip this many path components
-                $parts = explode('/', $filename);
-                if (!$header['typeflag']) {
-                    $base = array_pop($parts); // keep filename itself
-                } else {
-                    $base = '';
+            // create output directory
+            $output    = '$outdir/'.$fileinfo->getPath();
+            $directory = ($fileinfo->getIsdir()) ? $output : dirname($output);
+            @mkdir($directory, 0777, true);
+
+            // extract data
+            if (!$fileinfo->getIsdir()) {
+                $fp = fopen($output, "wb");
+                if (!$fp) {
+                    throw new ArchiveIOException('Could not open file for writing: '.$output);
                 }
-                $filename = join('/', array_slice($parts, $strip));
-                if ($base) {
-                    $filename .= "/$base";
+
+                $size = floor($header['size'] / 512);
+                for ($i = 0; $i < $size; $i++) {
+                    fwrite($fp, $this->readbytes(512), 512);
                 }
+                if (($header['size'] % 512) != 0) {
+                    fwrite($fp, $this->readbytes(512), $header['size'] % 512);
+                }
+
+                fclose($fp);
+                touch($output, $fileinfo->getMtime());
+                chmod($output, $fileinfo->getMode());
             } else {
-                // ifstrip is a string, we strip a prefix here
-                if (substr($filename, 0, $striplen) == $strip) {
-                    $filename = substr($filename, $striplen);
-                }
+                $this->skipbytes(ceil($header['size'] / 512) * 512); // the size is usually 0 for directories
             }
 
-            // check if this should be extracted
-            $extract = true;
-            if (!$filename) {
-                $extract = false;
-            } else {
-                if ($include) {
-                    if (preg_match($include, $filename)) {
-                        $extract = true;
-                    } else {
-                        $extract = false;
-                    }
-                }
-                if ($exclude && preg_match($exclude, $filename)) {
-                    $extract = false;
-                }
-            }
-
-            // Now do the extraction (or not)
-            if ($extract) {
-                $extracted[] = $header;
-
-                $output    = "$outdir/$filename";
-                $directory = ($header['typeflag']) ? $output : dirname($output);
-                @mkdir($directory, 0777, true);
-
-                // is this a file?
-                if (!$header['typeflag']) {
-                    $fp = fopen($output, "wb");
-                    if (!$fp) {
-                        throw new ArchiveIOException('Could not open file for writing: '.$output);
-                    }
-
-                    $size = floor($header['size'] / 512);
-                    for ($i = 0; $i < $size; $i++) {
-                        fwrite($fp, $this->readbytes(512), 512);
-                    }
-                    if (($header['size'] % 512) != 0) {
-                        fwrite($fp, $this->readbytes(512), $header['size'] % 512);
-                    }
-
-                    fclose($fp);
-                    touch($output, $header['mtime']);
-                    chmod($output, $header['perm']);
-                } else {
-                    $this->skipbytes(ceil($header['size'] / 512) * 512); // the size is usually 0 for directories
-                }
-            } else {
-                $this->skipbytes(ceil($header['size'] / 512) * 512);
-            }
+            $extracted[] = $fileinfo;
         }
 
         $this->close();
@@ -307,39 +262,29 @@ class Tar extends Archive
     /**
      * Add a file to the current TAR archive using an existing file in the filesystem
      *
-     * @todo handle directory adding
-     * @param string $file the original file
-     * @param string $name the name to use for the file in the archive
+     * @param string          $file     path to the original file
+     * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
      * @throws ArchiveIOException
      */
-    public function addFile($file, $name = '')
+    public function addFile($file, $fileinfo = '')
     {
+        if (!is_a($fileinfo, 'FileInfo')) {
+            $fileinfo = FileInfo::fromPath($file, $fileinfo);
+        }
+
         if ($this->closed) {
             throw new ArchiveIOException('Archive has been closed, files can no longer be added');
         }
-
-        if (!$name) {
-            $name = $file;
-        }
-        $name = $this->cleanPath($name);
 
         $fp = fopen($file, 'rb');
         if (!$fp) {
             throw new ArchiveIOException('Could not open file for reading: '.$file);
         }
 
-        // create file header and copy all stat info from the original file
-        clearstatcache(false, $file);
-        $stat = stat($file);
-        $this->writeFileHeader(
-            $name,
-            $stat[4],
-            $stat[5],
-            fileperms($file),
-            filesize($file),
-            filemtime($file)
-        );
+        // create file header
+        $this->writeFileHeader($fileinfo);
 
+        // write data
         while (!feof($fp)) {
             $data = fread($fp, 512);
             if ($data === false) {
@@ -357,31 +302,23 @@ class Tar extends Archive
     /**
      * Add a file to the current TAR archive using the given $data as content
      *
-     * @param string $name
-     * @param string $data
-     * @param int    $uid
-     * @param int    $gid
-     * @param int    $perm
-     * @param int    $mtime
+     * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data
+     * @param string          $data     binary content of the file to add
      * @throws ArchiveIOException
      */
-    public function addData($name, $data, $uid = 0, $gid = 0, $perm = 0666, $mtime = 0)
+    public function addData($fileinfo, $data)
     {
+        if (!is_a($fileinfo, 'FileInfo')) {
+            $fileinfo = new FileInfo($fileinfo);
+        }
+
         if ($this->closed) {
             throw new ArchiveIOException('Archive has been closed, files can no longer be added');
         }
 
-        $name = $this->cleanPath($name);
-        $len  = strlen($data);
-
-        $this->writeFileHeader(
-            $name,
-            $uid,
-            $gid,
-            $perm,
-            $len,
-            ($mtime) ? $mtime : time()
-        );
+        $len = strlen($data);
+        $fileinfo->setSize($len);
+        $this->writeFileHeader($fileinfo);
 
         for ($s = 0; $s < $len; $s += 512) {
             $this->writebytes(pack("a512", substr($data, $s, 512)));
@@ -535,18 +472,14 @@ class Tar extends Archive
     /**
      * Write a file header
      *
-     * @param string $name
-     * @param int    $uid
-     * @param int    $gid
-     * @param int    $perm
-     * @param int    $size
-     * @param int    $mtime
-     * @param string $typeflag Set to '5' for directories
+     * @param FileInfo $fileinfo
+     * @internal param string $typeflag Set to '5' for directories
      */
-    protected function writeFileHeader($name, $uid, $gid, $perm, $size, $mtime, $typeflag = '')
+    protected function writeFileHeader(FileInfo $fileinfo)
     {
         // handle filename length restrictions
         $prefix  = '';
+        $name    = $fileinfo->getPath();
         $namelen = strlen($name);
         if ($namelen > 100) {
             $file = basename($name);
@@ -566,11 +499,12 @@ class Tar extends Archive
         }
 
         // values are needed in octal
-        $uid   = sprintf("%6s ", decoct($uid));
-        $gid   = sprintf("%6s ", decoct($gid));
-        $perm  = sprintf("%6s ", decoct($perm));
-        $size  = sprintf("%11s ", decoct($size));
-        $mtime = sprintf("%11s", decoct($mtime));
+        $uid      = sprintf("%6s ", decoct($fileinfo->getUid()));
+        $gid      = sprintf("%6s ", decoct($fileinfo->getGid()));
+        $perm     = sprintf("%6s ", decoct($fileinfo->getMode()));
+        $size     = sprintf("%11s ", decoct($fileinfo->getSize()));
+        $mtime    = sprintf("%11s", decoct($fileinfo->getMtime()));
+        $typeflag = $fileinfo->getIsdir() ? '5' : '0';
 
         $data_first = pack("a100a8a8a8a12A12", $name, $perm, $uid, $gid, $size, $mtime);
         $data_last  = pack("a1a100a6a2a32a32a8a8a155a12", $typeflag, '', 'ustar', '', '', '', '', '', $prefix, "");
@@ -653,27 +587,25 @@ class Tar extends Archive
     }
 
     /**
-     * Cleans up a path and removes relative parts, also strips leading slashes
+     * Creates a FileInfo object from the given parsed header
      *
-     * @param string $path
-     * @return string
+     * @param $header
+     * @return FileInfo
      */
-    public function cleanPath($path)
+    protected function header2fileinfo($header)
     {
-        $path    = str_replace('\\', '/', $path);
-        $path    = explode('/', $path);
-        $newpath = array();
-        foreach ($path as $p) {
-            if ($p === '' || $p === '.') {
-                continue;
-            }
-            if ($p === '..') {
-                array_pop($newpath);
-                continue;
-            }
-            array_push($newpath, $p);
-        }
-        return trim(implode('/', $newpath), '/');
+        $fileinfo = new FileInfo();
+        $fileinfo->setPath($header['filename']);
+        $fileinfo->setMode($header['perm']);
+        $fileinfo->setUid($header['uid']);
+        $fileinfo->setGid($header['gid']);
+        $fileinfo->setSize($header['size']);
+        $fileinfo->setMtime($header['mtime']);
+        $fileinfo->setOwner($header['uname']);
+        $fileinfo->setGroup($header['gname']);
+        $fileinfo->setIsdir((bool) $header['typeflag']);
+
+        return $fileinfo;
     }
 
     /**

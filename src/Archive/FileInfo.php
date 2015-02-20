@@ -1,9 +1,11 @@
 <?php
 
+namespace Archive;
+
 /**
  * Class FileInfo
  *
- * stores meta data over a file in an Archive
+ * stores meta data about a file in an Archive
  */
 class FileInfo
 {
@@ -11,6 +13,7 @@ class FileInfo
     protected $isdir = false;
     protected $path = '';
     protected $size = 0;
+    protected $csize = 0;
     protected $mtime = 0;
     protected $mode = 0664;
     protected $owner = '';
@@ -21,21 +24,27 @@ class FileInfo
 
     /**
      * initialize dynamic defaults
+     *
+     * @param string $path The path of the file, can also be set later through setPath()
      */
-    public function __construct()
+    public function __construct($path = '')
     {
         $this->mtime = time();
+        $this->setPath($path);
     }
 
     /**
      * Factory to build FileInfo from existing file or directory
      *
-     * @param $path
-     * @return FileInfo
+     * @param string $path path to a file on the local file system
+     * @param string $as   optional path to use inside the archive
      * @throws FileInfoException
+     * @return FileInfo
      */
-    public static function fromPath($path)
+    public static function fromPath($path, $as = '')
     {
+        clearstatcache(false, $path);
+
         if (!file_exists($path)) {
             throw new FileInfoException("$path does not exist");
         }
@@ -51,6 +60,10 @@ class FileInfo
         $file->setUid($stat['uid']);
         $file->setGid($stat['gid']);
         $file->setMtime($stat['mtime']);
+
+        if ($as) {
+            $file->setPath($as);
+        }
 
         return $file;
     }
@@ -69,6 +82,22 @@ class FileInfo
     public function setSize($size)
     {
         $this->size = $size;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCsize()
+    {
+        return $this->csize;
+    }
+
+    /**
+     * @param int $csize
+     */
+    public function setCsize($csize)
+    {
+        $this->csize = $csize;
     }
 
     /**
@@ -281,8 +310,29 @@ class FileInfo
         $this->setPath($filename);
     }
 
+    /**
+     * Does the file match the given include and exclude expressions?
+     *
+     * Exclude rules take precedence over include rules
+     *
+     * @param string $include Regular expression of files to include
+     * @param string $exclude Regular expression of files to exclude
+     * @return bool
+     */
+    public function match($include = '', $exclude = '')
+    {
+        $extract = true;
+        if ($include && !preg_match($include, $this->getPath())) {
+            $extract = false;
+        }
+        if ($exclude && preg_match($exclude, $this->getPath())) {
+            $extract = false;
+        }
+
+        return $extract;
+    }
 }
 
-class FileInfoException extends Exception
+class FileInfoException extends \Exception
 {
 }

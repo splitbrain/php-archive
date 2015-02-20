@@ -1,6 +1,9 @@
 <?php
 
-class Zip {
+namespace Archive;
+
+class Zip
+{
 
     protected $file = '';
     protected $fh;
@@ -13,38 +16,32 @@ class Zip {
      * Open an existing ZIP file for reading
      *
      * @param string $file
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      */
-    public function open($file) {
+    public function open($file)
+    {
         $this->file = $file;
         $this->fh   = @fopen($this->file, 'rb');
-        if(!$this->fh) throw new ZipIOException('Could not open file for reading: '.$this->file);
+        if (!$this->fh) {
+            throw new ArchiveIOException('Could not open file for reading: '.$this->file);
+        }
         $this->closed = false;
     }
 
     /**
      * Read the contents of a ZIP archive
      *
-     * This function lists the files stored in the archive, and returns an indexed array of associative
-     * arrays containing for each file the following information:
+     * This function lists the files stored in the archive, and returns an indexed array of FileInfo objects
      *
-     * checksum    Tar Checksum of the file
-     * filename    The full name of the stored file (up to 100 c.)
-     * mode        UNIX permissions in DECIMAL, not octal
-     * uid         The Owner ID
-     * gid         The Group ID
-     * size        Uncompressed filesize
-     * mtime       Timestamp of last modification
-     * typeflag    Empty for files, set for folders
-     * link        Is it a symlink?
-     * uname       Owner name
-     * gname       Group name
-     *
-     * The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
+     * The archive is closed afer reading the contents, for API compatibility with TAR files
      * Reopen the file with open() again if you want to do additional operations
+     *
+     * @throws ArchiveIOException
+     * @return FileInfo[]
      */
-    public function contents() {
-        if($this->closed || !$this->file) throw new ZipIOException('Can not read from a closed archive');
+    public function contents()
+    {
+        if ($this->closed || !$this->file) throw new ArchiveIOException('Can not read from a closed archive');
 
         $result = array();
 
@@ -53,21 +50,17 @@ class Zip {
         @rewind($this->fh);
         @fseek($this->fh, $centd['offset']);
 
-        for($i = 0; $i < $centd['entries']; $i++) {
+        for ($i = 0; $i < $centd['entries']; $i++) {
             $header = $this->readCentralFileHeader();
 
-            $info                    = array();
-            $info['filename']        = $header['filename'];
-            $info['stored_filename'] = $header['stored_filename'];
-            $info['size']            = $header['size'];
-            $info['compressed_size'] = $header['compressed_size'];
-            $info['crc']             = strtoupper(dechex($header['crc']));
-            $info['mtime']           = $header['mtime'];
-            $info['comment']         = $header['comment'];
-            $info['folder']          = ($header['external'] == 0x41FF0010 || $header['external'] == 16) ? 1 : 0;
-            $info['index']           = $i;
-            $info['status']          = $header['status'];
-            $result[]                = $info;
+            $info = new FileInfo();
+            $info->setPath($header['filename']);
+            $info->setSize($header['size']);
+            $info->setCsize($header['compressed_size']);
+            $info->setMtime($header['mtime']);
+            $info->setComment($header['comment']);
+            $info->setIsdir($header['external'] == 0x41FF0010 || $header['external'] == 16);
+            $result[] = $info;
         }
 
         $this->close();
@@ -97,14 +90,15 @@ class Zip {
      * @param int|string $strip   either the number of path components or a fixed prefix to strip
      * @param string     $exclude a regular expression of files to exclude
      * @param string     $include a regular expression of files to include
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      * @return array
      */
-    function extract($outdir, $strip = '', $exclude = '', $include = '') {
-        if($this->closed || !$this->file) throw new ZipIOException('Can not read from a closed archive');
+    function extract($outdir, $strip = '', $exclude = '', $include = '')
+    {
+        if ($this->closed || !$this->file) throw new ArchiveIOException('Can not read from a closed archive');
 
         $outdir = rtrim($outdir, '/');
-        io_mkdir_p($outdir);
+        mkdir($outdir, 0777, true);
         $striplen = strlen($strip);
 
         $extracted = array();
@@ -112,7 +106,7 @@ class Zip {
         $cdir      = $this->readCentralDir();
         $pos_entry = $cdir['offset']; // begin of the central file directory
 
-        for($i = 0; $i < $cdir['entries']; $i++) {
+        for ($i = 0; $i < $cdir['entries']; $i++) {
             @fseek($this->fh, $pos_entry);
             $header          = $this->readCentralFileHeader();
             $header['index'] = $i;
@@ -124,51 +118,51 @@ class Zip {
 
             // strip prefix
             $filename = $this->cleanPath($header['filename']);
-            if(is_int($strip)) {
+            if (is_int($strip)) {
                 // if $strip is an integer we strip this many path components
                 $parts = explode('/', $filename);
-                if(!$header['typeflag']) {
+                if (!$header['typeflag']) {
                     $base = array_pop($parts); // keep filename itself
                 } else {
                     $base = '';
                 }
                 $filename = join('/', array_slice($parts, $strip));
-                if($base) $filename .= "/$base";
+                if ($base) $filename .= "/$base";
             } else {
                 // if strip is a string, we strip a prefix here
-                if(substr($filename, 0, $striplen) == $strip) $filename = substr($filename, $striplen);
+                if (substr($filename, 0, $striplen) == $strip) $filename = substr($filename, $striplen);
             }
 
             // check if this should be extracted
             $extract = true;
-            if(!$filename) {
+            if (!$filename) {
                 $extract = false;
             } else {
-                if($include) {
-                    if(preg_match($include, $filename)) {
+                if ($include) {
+                    if (preg_match($include, $filename)) {
                         $extract = true;
                     } else {
                         $extract = false;
                     }
                 }
-                if($exclude && preg_match($exclude, $filename)) {
+                if ($exclude && preg_match($exclude, $filename)) {
                     $extract = false;
                 }
             }
 
             // Now do the extraction (or not)
-            if($extract) {
+            if ($extract) {
                 $extracted[] = $header;
 
                 $output    = "$outdir/$filename";
                 $directory = ($header['folder']) ? $output : dirname($output);
-                io_mkdir_p($directory);
+                mkdir($directory, 0777, true);
 
                 // nothing more to do for directories
-                if($header['folder']) continue;
+                if ($header['folder']) continue;
 
                 // compressed files are written to temporary .gz file first
-                if($header['compression'] == 0) {
+                if ($header['compression'] == 0) {
                     $extractto = $output;
                 } else {
                     $extractto = $output.'.gz';
@@ -176,20 +170,25 @@ class Zip {
 
                 // open file for writing
                 $fp = fopen($extractto, "wb");
-                if(!$fp) throw new ZipIOException('Could not open file for writing: '.$extractto);
+                if (!$fp) throw new ArchiveIOException('Could not open file for writing: '.$extractto);
 
                 // prepend compression header
-                if($header['compression'] != 0) {
+                if ($header['compression'] != 0) {
                     $binary_data = pack(
-                        'va1a1Va1a1', 0x8b1f, chr($header['compression']),
-                        chr(0x00), time(), chr(0x00), chr(3)
+                        'va1a1Va1a1',
+                        0x8b1f,
+                        chr($header['compression']),
+                        chr(0x00),
+                        time(),
+                        chr(0x00),
+                        chr(3)
                     );
                     fwrite($fp, $binary_data, 10);
                 }
 
                 // read the file and store it on disk
                 $size = $header['compressed_size'];
-                while($size != 0) {
+                while ($size != 0) {
                     $read_size   = ($size < 2048 ? $size : 2048);
                     $buffer      = fread($this->fh, $read_size);
                     $binary_data = pack('a'.$read_size, $buffer);
@@ -198,7 +197,7 @@ class Zip {
                 }
 
                 // finalize compressed file
-                if($header['compression'] != 0) {
+                if ($header['compression'] != 0) {
                     $binary_data = pack('VV', $header['crc'], $header['size']);
                     fwrite($fp, $binary_data, 8);
                 }
@@ -207,17 +206,17 @@ class Zip {
                 fclose($fp);
 
                 // unpack compressed file
-                if($header['compression'] != 0) {
+                if ($header['compression'] != 0) {
                     $gzp = @gzopen($extractto, 'rb');
-                    if(!$gzp) {
+                    if (!$gzp) {
                         @unlink($extractto);
-                        throw new ZipIOException('Failed file extracting. gzip support missing?');
+                        throw new ArchiveIOException('Failed file extracting. gzip support missing?');
                     }
                     $fp = @fopen($output, 'wb');
-                    if(!$fp) throw new ZipIOException('Could not open file for writing: '.$extractto);
+                    if (!$fp) throw new ArchiveIOException('Could not open file for writing: '.$extractto);
 
                     $size = $header['size'];
-                    while($size != 0) {
+                    while ($size != 0) {
                         $read_size   = ($size < 2048 ? $size : 2048);
                         $buffer      = gzread($gzp, $read_size);
                         $binary_data = pack('a'.$read_size, $buffer);
@@ -243,17 +242,18 @@ class Zip {
      * If $file is empty, the zip file will be created in memory
      *
      * @param string $file
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      */
-    public function create($file = '') {
+    public function create($file = '')
+    {
         $this->file   = $file;
         $this->memory = '';
         $this->fh     = 0;
 
-        if($this->file) {
+        if ($this->file) {
             $this->fh = @fopen($this->file, 'wb');
 
-            if(!$this->fh) throw new ZipIOException('Could not open file for writing: '.$this->file);
+            if (!$this->fh) throw new ArchiveIOException('Could not open file for writing: '.$this->file);
         }
         $this->writeaccess = true;
         $this->closed      = false;
@@ -267,15 +267,16 @@ class Zip {
      * @param string $file     the original file
      * @param string $name     the name to use for the file in the archive
      * @param int    $compress Compression level, 0 for no compression
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      */
-    public function addFile($file, $name = '', $compress = 9) {
-        if($this->closed) throw new ZipIOException('Archive has been closed, files can no longer be added');
+    public function addFile($file, $name = '', $compress = 9)
+    {
+        if ($this->closed) throw new ArchiveIOException('Archive has been closed, files can no longer be added');
 
-        if(!$name) $name = $file;
+        if (!$name) $name = $file;
 
         $data = @file_get_contents($file);
-        if($data === false) throw new ZipIOException('Could not open file for reading: '.$file);
+        if ($data === false) throw new ArchiveIOException('Could not open file for reading: '.$file);
 
         $mtime = filemtime($file);
 
@@ -290,24 +291,26 @@ class Zip {
      * @param string $data
      * @param int    $mtime
      * @param int    $compress Compression level, 0 for no compression
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      */
-    public function addData($name, $data, $mtime = 0, $compress = 9) {
-        if($this->closed) throw new ZipIOException('Archive has been closed, files can no longer be added');
+    public function addData($name, $data, $mtime = 0, $compress = 9)
+    {
+        if ($this->closed) throw new ArchiveIOException('Archive has been closed, files can no longer be added');
 
         // prepare the various header infos
         $name = $this->cleanPath($name);
-        if(!$mtime) $mtime = time();
+        if (!$mtime) $mtime = time();
         $dtime    = dechex($this->makeDosTime($mtime));
         $hexdtime = pack(
-            'H*', $dtime[6].$dtime[7].
-                $dtime[4].$dtime[5].
-                $dtime[2].$dtime[3].
-                $dtime[0].$dtime[1]
+            'H*',
+            $dtime[6].$dtime[7].
+            $dtime[4].$dtime[5].
+            $dtime[2].$dtime[3].
+            $dtime[0].$dtime[1]
         );
         $size     = strlen($data);
         $crc      = crc32($data);
-        if($compress) {
+        if ($compress) {
             $fmagic = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00";
             $cmagic = "\x50\x4b\x01\x02\x00\x00\x14\x00\x00\x00\x08\x00";
             $data   = gzcompress($data, $compress);
@@ -342,11 +345,12 @@ class Zip {
      * After a call to this function no more data can be added to the archive, for
      * read access no reading is allowed anymore
      */
-    public function close() {
-        if($this->closed) return; // we did this already
+    public function close()
+    {
+        if ($this->closed) return; // we did this already
 
         // write footer
-        if($this->writeaccess) {
+        if ($this->writeaccess) {
             $offset  = $this->dataOffset();
             $ctrldir = join('', $this->ctrl_dir);
             $this->writebytes($ctrldir);
@@ -357,7 +361,7 @@ class Zip {
         }
 
         // close file handles
-        if($this->file) {
+        if ($this->file) {
             fclose($this->fh);
             $this->file = '';
             $this->fh   = 0;
@@ -372,7 +376,8 @@ class Zip {
      *
      * This implicitly calls close() on the Archive
      */
-    public function getArchive() {
+    public function getArchive()
+    {
         $this->close();
 
         return $this->memory;
@@ -385,11 +390,12 @@ class Zip {
      * let the library work on the new file directly.
      *
      * @param     $file
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      */
-    public function save($file) {
-        if(!file_put_contents($file, $this->getArchive())) {
-            throw new ZipIOException('Could not write to file: '.$file);
+    public function save($file)
+    {
+        if (!file_put_contents($file, $this->getArchive())) {
+            throw new ArchiveIOException('Could not write to file: '.$file);
         }
     }
 
@@ -399,13 +405,14 @@ class Zip {
      * @param string $path
      * @return string
      */
-    public function cleanPath($path) {
+    public function cleanPath($path)
+    {
         $path    = str_replace('\\', '/', $path);
         $path    = explode('/', $path);
         $newpath = array();
-        foreach($path as $p) {
-            if($p === '' || $p === '.') continue;
-            if($p === '..') {
+        foreach ($path as $p) {
+            if ($p === '' || $p === '.') continue;
+            if ($p === '..') {
                 array_pop($newpath);
                 continue;
             }
@@ -421,9 +428,10 @@ class Zip {
      *
      * @return array
      */
-    protected function readCentralDir() {
+    protected function readCentralDir()
+    {
         $size = filesize($this->file);
-        if($size < 277) {
+        if ($size < 277) {
             $maximum_size = $size;
         } else {
             $maximum_size = 277;
@@ -433,10 +441,10 @@ class Zip {
         $pos   = ftell($this->fh);
         $bytes = 0x00000000;
 
-        while($pos < $size) {
+        while ($pos < $size) {
             $byte  = @fread($this->fh, 1);
             $bytes = (($bytes << 8) & 0xFFFFFFFF) | ord($byte);
-            if($bytes == 0x504b0506) {
+            if ($bytes == 0x504b0506) {
                 break;
             }
             $pos++;
@@ -447,7 +455,7 @@ class Zip {
             fread($this->fh, 18)
         );
 
-        if($data['comment_size'] != 0) {
+        if ($data['comment_size'] != 0) {
             $centd['comment'] = fread($this->fh, $data['comment_size']);
         } else {
             $centd['comment'] = '';
@@ -468,32 +476,33 @@ class Zip {
      *
      * @return array
      */
-    protected function readCentralFileHeader() {
+    protected function readCentralFileHeader()
+    {
         $binary_data = fread($this->fh, 46);
         $header      = unpack(
             'vchkid/vid/vversion/vversion_extracted/vflag/vcompression/vmtime/vmdate/Vcrc/Vcompressed_size/Vsize/vfilename_len/vextra_len/vcomment_len/vdisk/vinternal/Vexternal/Voffset',
             $binary_data
         );
 
-        if($header['filename_len'] != 0) {
+        if ($header['filename_len'] != 0) {
             $header['filename'] = fread($this->fh, $header['filename_len']);
         } else {
             $header['filename'] = '';
         }
 
-        if($header['extra_len'] != 0) {
+        if ($header['extra_len'] != 0) {
             $header['extra'] = fread($this->fh, $header['extra_len']);
         } else {
             $header['extra'] = '';
         }
 
-        if($header['comment_len'] != 0) {
+        if ($header['comment_len'] != 0) {
             $header['comment'] = fread($this->fh, $header['comment_len']);
         } else {
             $header['comment'] = '';
         }
 
-        if($header['mdate'] && $header['mtime']) {
+        if ($header['mdate'] && $header['mtime']) {
             $hour            = ($header['mtime'] & 0xF800) >> 11;
             $minute          = ($header['mtime'] & 0x07E0) >> 5;
             $seconde         = ($header['mtime'] & 0x001F) * 2;
@@ -507,7 +516,7 @@ class Zip {
 
         $header['stored_filename'] = $header['filename'];
         $header['status']          = 'ok';
-        if(substr($header['filename'], -1) == '/') $header['external'] = 0x41FF0010;
+        if (substr($header['filename'], -1) == '/') $header['external'] = 0x41FF0010;
         $header['folder'] = ($header['external'] == 0x41FF0010 || $header['external'] == 16) ? 1 : 0;
 
         return $header;
@@ -522,26 +531,34 @@ class Zip {
      * @param array $header the central file header read previously (see above)
      * @return array
      */
-    function readFileHeader($header) {
+    function readFileHeader($header)
+    {
         $binary_data = fread($this->fh, 30);
-        $data        = unpack('vchk/vid/vversion/vflag/vcompression/vmtime/vmdate/Vcrc/Vcompressed_size/Vsize/vfilename_len/vextra_len', $binary_data);
+        $data        = unpack(
+            'vchk/vid/vversion/vflag/vcompression/vmtime/vmdate/Vcrc/Vcompressed_size/Vsize/vfilename_len/vextra_len',
+            $binary_data
+        );
 
         $header['filename'] = fread($this->fh, $data['filename_len']);
-        if($data['extra_len'] != 0) {
+        if ($data['extra_len'] != 0) {
             $header['extra'] = fread($this->fh, $data['extra_len']);
         } else {
             $header['extra'] = '';
         }
 
         $header['compression'] = $data['compression'];
-        foreach(array('size', 'compressed_size', 'crc') as $hd) { // On ODT files, these headers are 0. Keep the previous value.
-            if($data[$hd] != 0) $header[$hd] = $data[$hd];
+        foreach (array(
+                     'size',
+                     'compressed_size',
+                     'crc'
+                 ) as $hd) { // On ODT files, these headers are 0. Keep the previous value.
+            if ($data[$hd] != 0) $header[$hd] = $data[$hd];
         }
         $header['flag']  = $data['flag'];
         $header['mdate'] = $data['mdate'];
         $header['mtime'] = $data['mtime'];
 
-        if($header['mdate'] && $header['mtime']) {
+        if ($header['mdate'] && $header['mtime']) {
             $hour            = ($header['mtime'] & 0xF800) >> 11;
             $minute          = ($header['mtime'] & 0x07E0) >> 5;
             $seconde         = ($header['mtime'] & 0x001F) * 2;
@@ -563,17 +580,18 @@ class Zip {
      * Write to the open filepointer or memory
      *
      * @param string $data
-     * @throws ZipIOException
+     * @throws ArchiveIOException
      * @return int number of bytes written
      */
-    protected function writebytes($data) {
-        if(!$this->file) {
+    protected function writebytes($data)
+    {
+        if (!$this->file) {
             $this->memory .= $data;
             $written = strlen($data);
         } else {
             $written = @fwrite($this->fh, $data);
         }
-        if($written === false) throw new ZipIOException('Failed to write to archive stream');
+        if ($written === false) throw new ArchiveIOException('Failed to write to archive stream');
         return $written;
     }
 
@@ -583,8 +601,9 @@ class Zip {
      * @fixme might need a -1
      * @return int
      */
-    protected function dataOffset() {
-        if($this->file) {
+    protected function dataOffset()
+    {
+        if ($this->file) {
             return ftell($this->fh);
         } else {
             return strlen($this->memory);
@@ -599,9 +618,10 @@ class Zip {
      * @param $time
      * @return int
      */
-    protected function makeDosTime($time) {
+    protected function makeDosTime($time)
+    {
         $timearray = getdate($time);
-        if($timearray['year'] < 1980) {
+        if ($timearray['year'] < 1980) {
             $timearray['year']    = 1980;
             $timearray['mon']     = 1;
             $timearray['mday']    = 1;
@@ -617,7 +637,4 @@ class Zip {
         ($timearray['seconds'] >> 1);
     }
 
-}
-
-class ZipIOException extends Exception {
 }
