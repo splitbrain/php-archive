@@ -1,5 +1,5 @@
 {
-    "name": "splitbrain/PHPArchive",
+    "name": "splitbrain/php-archive",
     "description": "Pure-PHP implementation to read and write TAR and ZIP archives",
     "keywords": ["zip", "tar", "archive", "unpack", "extract", "unzip"],
     "authors": [

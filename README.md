@@ -11,7 +11,7 @@ Install
 
 Use composer:
 
-```php composer.phar require splitbrain/PHPArchive```
+```php composer.phar require splitbrain/php-archive```
 
 Usage
 -----
