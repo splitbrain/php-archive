@@ -41,7 +41,9 @@ class Zip
      */
     public function contents()
     {
-        if ($this->closed || !$this->file) throw new ArchiveIOException('Can not read from a closed archive');
+        if ($this->closed || !$this->file) {
+            throw new ArchiveIOException('Can not read from a closed archive');
+        }
 
         $result = array();
 
@@ -51,21 +53,11 @@ class Zip
         @fseek($this->fh, $centd['offset']);
 
         for ($i = 0; $i < $centd['entries']; $i++) {
-            $header = $this->readCentralFileHeader();
-
-            $info = new FileInfo();
-            $info->setPath($header['filename']);
-            $info->setSize($header['size']);
-            $info->setCsize($header['compressed_size']);
-            $info->setMtime($header['mtime']);
-            $info->setComment($header['comment']);
-            $info->setIsdir($header['external'] == 0x41FF0010 || $header['external'] == 16);
-            $result[] = $info;
+            $result[] = $this->header2fileinfo($this->readCentralFileHeader());
         }
 
         $this->close();
         return $result;
-
     }
 
     /**
@@ -83,23 +75,21 @@ class Zip
      * expression will never be extracted. Both parameters can be used in combination. Expressions are matched against
      * stripped filenames as described above.
      *
-     * The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
-     * Reopen the file with open() again if you want to do additional operations
-     *
      * @param string     $outdir  the target directory for extracting
      * @param int|string $strip   either the number of path components or a fixed prefix to strip
      * @param string     $exclude a regular expression of files to exclude
      * @param string     $include a regular expression of files to include
      * @throws ArchiveIOException
-     * @return array
+     * @return FileInfo[]
      */
     function extract($outdir, $strip = '', $exclude = '', $include = '')
     {
-        if ($this->closed || !$this->file) throw new ArchiveIOException('Can not read from a closed archive');
+        if ($this->closed || !$this->file) {
+            throw new ArchiveIOException('Can not read from a closed archive');
+        }
 
         $outdir = rtrim($outdir, '/');
         mkdir($outdir, 0777, true);
-        $striplen = strlen($strip);
 
         $extracted = array();
 
@@ -107,129 +97,107 @@ class Zip
         $pos_entry = $cdir['offset']; // begin of the central file directory
 
         for ($i = 0; $i < $cdir['entries']; $i++) {
+            // read file header
             @fseek($this->fh, $pos_entry);
             $header          = $this->readCentralFileHeader();
             $header['index'] = $i;
             $pos_entry       = ftell($this->fh); // position of the next file in central file directory
-
-            //FIXME should be unneeded: @rewind($zip);
             fseek($this->fh, $header['offset']); // seek to beginning of file header
-            $header = $this->readFileHeader($header);
+            $header   = $this->readFileHeader($header);
+            $fileinfo = $this->header2fileinfo($header);
 
-            // strip prefix
-            $filename = $this->cleanPath($header['filename']);
-            if (is_int($strip)) {
-                // if $strip is an integer we strip this many path components
-                $parts = explode('/', $filename);
-                if (!$header['typeflag']) {
-                    $base = array_pop($parts); // keep filename itself
-                } else {
-                    $base = '';
-                }
-                $filename = join('/', array_slice($parts, $strip));
-                if ($base) $filename .= "/$base";
-            } else {
-                // if strip is a string, we strip a prefix here
-                if (substr($filename, 0, $striplen) == $strip) $filename = substr($filename, $striplen);
+            // apply strip rules
+            $fileinfo->strip($strip);
+
+            // skip unwanted files
+            if (!strlen($fileinfo->getPath()) || !$fileinfo->match($include, $exclude)) {
+                continue;
             }
 
-            // check if this should be extracted
-            $extract = true;
-            if (!$filename) {
-                $extract = false;
-            } else {
-                if ($include) {
-                    if (preg_match($include, $filename)) {
-                        $extract = true;
-                    } else {
-                        $extract = false;
-                    }
-                }
-                if ($exclude && preg_match($exclude, $filename)) {
-                    $extract = false;
-                }
+            $extracted[] = $fileinfo;
+
+            // create output directory
+            $output    = '$outdir/'.$fileinfo->getPath();
+            $directory = ($header['folder']) ? $output : dirname($output);
+            mkdir($directory, 0777, true);
+
+            // nothing more to do for directories
+            if ($fileinfo->getIsdir()) {
+                continue;
             }
 
-            // Now do the extraction (or not)
-            if ($extract) {
-                $extracted[] = $header;
+            // compressed files are written to temporary .gz file first
+            if ($header['compression'] == 0) {
+                $extractto = $output;
+            } else {
+                $extractto = $output.'.gz';
+            }
 
-                $output    = "$outdir/$filename";
-                $directory = ($header['folder']) ? $output : dirname($output);
-                mkdir($directory, 0777, true);
+            // open file for writing
+            $fp = fopen($extractto, "wb");
+            if (!$fp) {
+                throw new ArchiveIOException('Could not open file for writing: '.$extractto);
+            }
 
-                // nothing more to do for directories
-                if ($header['folder']) continue;
+            // prepend compression header
+            if ($header['compression'] != 0) {
+                $binary_data = pack(
+                    'va1a1Va1a1',
+                    0x8b1f,
+                    chr($header['compression']),
+                    chr(0x00),
+                    time(),
+                    chr(0x00),
+                    chr(3)
+                );
+                fwrite($fp, $binary_data, 10);
+            }
 
-                // compressed files are written to temporary .gz file first
-                if ($header['compression'] == 0) {
-                    $extractto = $output;
-                } else {
-                    $extractto = $output.'.gz';
+            // read the file and store it on disk
+            $size = $header['compressed_size'];
+            while ($size != 0) {
+                $read_size   = ($size < 2048 ? $size : 2048);
+                $buffer      = fread($this->fh, $read_size);
+                $binary_data = pack('a'.$read_size, $buffer);
+                fwrite($fp, $binary_data, $read_size);
+                $size -= $read_size;
+            }
+
+            // finalize compressed file
+            if ($header['compression'] != 0) {
+                $binary_data = pack('VV', $header['crc'], $header['size']);
+                fwrite($fp, $binary_data, 8);
+            }
+
+            // close file
+            fclose($fp);
+
+            // unpack compressed file
+            if ($header['compression'] != 0) {
+                $gzp = @gzopen($extractto, 'rb');
+                if (!$gzp) {
+                    @unlink($extractto);
+                    throw new ArchiveIOException('Failed file extracting. gzip support missing?');
+                }
+                $fp = @fopen($output, 'wb');
+                if (!$fp) {
+                    throw new ArchiveIOException('Could not open file for writing: '.$extractto);
                 }
 
-                // open file for writing
-                $fp = fopen($extractto, "wb");
-                if (!$fp) throw new ArchiveIOException('Could not open file for writing: '.$extractto);
-
-                // prepend compression header
-                if ($header['compression'] != 0) {
-                    $binary_data = pack(
-                        'va1a1Va1a1',
-                        0x8b1f,
-                        chr($header['compression']),
-                        chr(0x00),
-                        time(),
-                        chr(0x00),
-                        chr(3)
-                    );
-                    fwrite($fp, $binary_data, 10);
-                }
-
-                // read the file and store it on disk
-                $size = $header['compressed_size'];
+                $size = $header['size'];
                 while ($size != 0) {
                     $read_size   = ($size < 2048 ? $size : 2048);
-                    $buffer      = fread($this->fh, $read_size);
+                    $buffer      = gzread($gzp, $read_size);
                     $binary_data = pack('a'.$read_size, $buffer);
-                    fwrite($fp, $binary_data, $read_size);
+                    @fwrite($fp, $binary_data, $read_size);
                     $size -= $read_size;
                 }
-
-                // finalize compressed file
-                if ($header['compression'] != 0) {
-                    $binary_data = pack('VV', $header['crc'], $header['size']);
-                    fwrite($fp, $binary_data, 8);
-                }
-
-                // close file
                 fclose($fp);
-
-                // unpack compressed file
-                if ($header['compression'] != 0) {
-                    $gzp = @gzopen($extractto, 'rb');
-                    if (!$gzp) {
-                        @unlink($extractto);
-                        throw new ArchiveIOException('Failed file extracting. gzip support missing?');
-                    }
-                    $fp = @fopen($output, 'wb');
-                    if (!$fp) throw new ArchiveIOException('Could not open file for writing: '.$extractto);
-
-                    $size = $header['size'];
-                    while ($size != 0) {
-                        $read_size   = ($size < 2048 ? $size : 2048);
-                        $buffer      = gzread($gzp, $read_size);
-                        $binary_data = pack('a'.$read_size, $buffer);
-                        @fwrite($fp, $binary_data, $read_size);
-                        $size -= $read_size;
-                    }
-                    fclose($fp);
-                    gzclose($gzp);
-                }
-
-                touch($output, $header['mtime']);
-                //FIXME what about permissions?
+                gzclose($gzp);
             }
+
+            touch($output, $fileinfo->getMtime());
+            //FIXME what about permissions?
         }
 
         $this->close();
@@ -253,7 +221,9 @@ class Zip
         if ($this->file) {
             $this->fh = @fopen($this->file, 'wb');
 
-            if (!$this->fh) throw new ArchiveIOException('Could not open file for writing: '.$this->file);
+            if (!$this->fh) {
+                throw new ArchiveIOException('Could not open file for writing: '.$this->file);
+            }
         }
         $this->writeaccess = true;
         $this->closed      = false;
@@ -263,44 +233,50 @@ class Zip
     /**
      * Add a file to the current ZIP archive using an existing file in the filesystem
      *
-     * @todo handle directory adding
-     * @param string $file     the original file
-     * @param string $name     the name to use for the file in the archive
-     * @param int    $compress Compression level, 0 for no compression
+     * @param string          $file     path to the original file
+     * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
+     * @param int             $compress Compression level, 0 for no compression
      * @throws ArchiveIOException
      */
-    public function addFile($file, $name = '', $compress = 9)
+    public function addFile($file, $fileinfo, $compress = 9)
     {
-        if ($this->closed) throw new ArchiveIOException('Archive has been closed, files can no longer be added');
+        if (!is_a($fileinfo, 'FileInfo')) {
+            $fileinfo = FileInfo::fromPath($file, $fileinfo);
+        }
 
-        if (!$name) $name = $file;
+        if ($this->closed) {
+            throw new ArchiveIOException('Archive has been closed, files can no longer be added');
+        }
 
         $data = @file_get_contents($file);
-        if ($data === false) throw new ArchiveIOException('Could not open file for reading: '.$file);
-
-        $mtime = filemtime($file);
+        if ($data === false) {
+            throw new ArchiveIOException('Could not open file for reading: '.$file);
+        }
 
         // FIXME could we stream writing compressed data? gzwrite on a fopen handle?
-        $this->addData($name, $data, $mtime, $compress);
+        $this->addData($fileinfo, $data, $compress);
     }
 
     /**
      * Add a file to the current TAR archive using the given $data as content
      *
-     * @param string $name
-     * @param string $data
-     * @param int    $mtime
-     * @param int    $compress Compression level, 0 for no compression
+     * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data
+     * @param string          $data     binary content of the file to add
+     * @param int             $compress Compression level, 0 for no compression
      * @throws ArchiveIOException
      */
-    public function addData($name, $data, $mtime = 0, $compress = 9)
+    public function addData($fileinfo, $data, $compress = 9)
     {
-        if ($this->closed) throw new ArchiveIOException('Archive has been closed, files can no longer be added');
+        if (!is_a($fileinfo, 'FileInfo')) {
+            $fileinfo = new FileInfo($fileinfo);
+        }
+
+        if ($this->closed) {
+            throw new ArchiveIOException('Archive has been closed, files can no longer be added');
+        }
 
         // prepare the various header infos
-        $name = $this->cleanPath($name);
-        if (!$mtime) $mtime = time();
-        $dtime    = dechex($this->makeDosTime($mtime));
+        $dtime    = dechex($this->makeDosTime($fileinfo->getMtime()));
         $hexdtime = pack(
             'H*',
             $dtime[6].$dtime[7].
@@ -321,6 +297,7 @@ class Zip
         }
         $csize  = strlen($data);
         $offset = $this->dataOffset();
+        $name   = $fileinfo->getPath();
 
         // write data
         $this->writebytes($fmagic);
@@ -347,7 +324,9 @@ class Zip
      */
     public function close()
     {
-        if ($this->closed) return; // we did this already
+        if ($this->closed) {
+            return;
+        } // we did this already
 
         // write footer
         if ($this->writeaccess) {
@@ -397,28 +376,6 @@ class Zip
         if (!file_put_contents($file, $this->getArchive())) {
             throw new ArchiveIOException('Could not write to file: '.$file);
         }
-    }
-
-    /**
-     * Cleans up a path and removes relative parts, also strips leading slashes
-     *
-     * @param string $path
-     * @return string
-     */
-    public function cleanPath($path)
-    {
-        $path    = str_replace('\\', '/', $path);
-        $path    = explode('/', $path);
-        $newpath = array();
-        foreach ($path as $p) {
-            if ($p === '' || $p === '.') continue;
-            if ($p === '..') {
-                array_pop($newpath);
-                continue;
-            }
-            array_push($newpath, $p);
-        }
-        return trim(implode('/', $newpath), '/');
     }
 
     /**
@@ -516,7 +473,9 @@ class Zip
 
         $header['stored_filename'] = $header['filename'];
         $header['status']          = 'ok';
-        if (substr($header['filename'], -1) == '/') $header['external'] = 0x41FF0010;
+        if (substr($header['filename'], -1) == '/') {
+            $header['external'] = 0x41FF0010;
+        }
         $header['folder'] = ($header['external'] == 0x41FF0010 || $header['external'] == 16) ? 1 : 0;
 
         return $header;
@@ -552,7 +511,9 @@ class Zip
                      'compressed_size',
                      'crc'
                  ) as $hd) { // On ODT files, these headers are 0. Keep the previous value.
-            if ($data[$hd] != 0) $header[$hd] = $data[$hd];
+            if ($data[$hd] != 0) {
+                $header[$hd] = $data[$hd];
+            }
         }
         $header['flag']  = $data['flag'];
         $header['mdate'] = $data['mdate'];
@@ -577,6 +538,24 @@ class Zip
     }
 
     /**
+     * Create fileinfo object from header data
+     *
+     * @param $header
+     * @return FileInfo
+     */
+    protected function header2fileinfo($header)
+    {
+        $fileinfo = new FileInfo();
+        $fileinfo->setPath($header['filename']);
+        $fileinfo->setSize($header['size']);
+        $fileinfo->setCsize($header['compressed_size']);
+        $fileinfo->setMtime($header['mtime']);
+        $fileinfo->setComment($header['comment']);
+        $fileinfo->setIsdir($header['external'] == 0x41FF0010 || $header['external'] == 16);
+        return $fileinfo;
+    }
+
+    /**
      * Write to the open filepointer or memory
      *
      * @param string $data
@@ -591,7 +570,9 @@ class Zip
         } else {
             $written = @fwrite($this->fh, $data);
         }
-        if ($written === false) throw new ArchiveIOException('Failed to write to archive stream');
+        if ($written === false) {
+            throw new ArchiveIOException('Failed to write to archive stream');
+        }
         return $written;
     }
 

@@ -41,19 +41,18 @@ abstract class Archive
      * Extract an existing archive
      *
      * The $strip parameter allows you to strip a certain number of path components from the filenames
-     * found in the tar file, similar to the --strip-components feature of GNU tar. This is triggered when
+     * found in the archive file, similar to the --strip-components feature of GNU tar. This is triggered when
      * an integer is passed as $strip.
      * Alternatively a fixed string prefix may be passed in $strip. If the filename matches this prefix,
      * the prefix will be stripped. It is recommended to give prefixes with a trailing slash.
      *
      * By default this will extract all files found in the archive. You can restrict the output using the $include
      * and $exclude parameter. Both expect a full regular expression (including delimiters and modifiers). If
-     * $include is set only files that match this expression will be extracted. Files that match the $exclude
+     * $include is set, only files that match this expression will be extracted. Files that match the $exclude
      * expression will never be extracted. Both parameters can be used in combination. Expressions are matched against
      * stripped filenames as described above.
      *
-     * The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
-     * Reopen the file with open() again if you want to do additional operations
+     * The archive is closed afterwards. Reopen the file with open() again if you want to do additional operations
      *
      * @param string     $outdir  the target directory for extracting
      * @param int|string $strip   either the number of path components or a fixed prefix to strip
@@ -67,7 +66,7 @@ abstract class Archive
     /**
      * Create a new archive file
      *
-     * If $file is empty, the tar file will be created in memory
+     * If $file is empty, the archive file will be created in memory
      *
      * @param string $file
      */
