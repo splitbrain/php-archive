@@ -1,6 +1,6 @@
 <?php
 
-namespace Archive;
+namespace splitbrain\PHPArchive;
 
 abstract class Archive
 {

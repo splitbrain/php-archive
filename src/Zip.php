@@ -1,6 +1,6 @@
 <?php
 
-namespace Archive;
+namespace splitbrain\PHPArchive;
 
 class Zip
 {
@@ -548,7 +548,7 @@ class Zip
         $fileinfo = new FileInfo();
         $fileinfo->setPath($header['filename']);
         $fileinfo->setSize($header['size']);
-        $fileinfo->setCsize($header['compressed_size']);
+        $fileinfo->setCompressedSize($header['compressed_size']);
         $fileinfo->setMtime($header['mtime']);
         $fileinfo->setComment($header['comment']);
         $fileinfo->setIsdir($header['external'] == 0x41FF0010 || $header['external'] == 16);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Archive;
+namespace splitbrain\PHPArchive;
 
 /**
  * Class FileInfo
@@ -87,7 +87,7 @@ class FileInfo
     /**
      * @return int
      */
-    public function getCsize()
+    public function getCompressedSize()
     {
         return $this->csize;
     }
@@ -95,7 +95,7 @@ class FileInfo
     /**
      * @param int $csize
      */
-    public function setCsize($csize)
+    public function setCompressedSize($csize)
     {
         $this->csize = $csize;
     }
