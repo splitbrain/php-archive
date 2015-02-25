@@ -41,6 +41,15 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function test_missing()
+    {
+        $tar = new Tar();
+        $tar->open('nope.tar');
+    }
+
+    /**
      * simple test that checks that the given filenames and contents can be grepped from
      * the uncompressed tar stream
      *

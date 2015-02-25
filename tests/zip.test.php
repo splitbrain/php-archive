@@ -6,6 +6,15 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
 {
 
     /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function test_missing()
+    {
+        $tar = new Zip();
+        $tar->open('nope.zip');
+    }
+
+    /**
      * simple test that checks that the given filenames and contents can be grepped from
      * the uncompressed zip stream
      *
