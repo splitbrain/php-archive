@@ -11,7 +11,7 @@ namespace splitbrain\PHPArchive;
  * @package splitbrain\PHPArchive
  * @license MIT
  */
-class Zip
+class Zip extends Archive
 {
 
     protected $file = '';
@@ -20,6 +20,24 @@ class Zip
     protected $closed = true;
     protected $writeaccess = false;
     protected $ctrl_dir;
+    protected $complevel = 9;
+
+    /**
+     * Set the compression level.
+     *
+     * Compression Type is ignored for ZIP
+     *
+     * You can call this function before adding each file to set differen compression levels
+     * for each file.
+     *
+     * @param int $level Compression level (0 to 9)
+     * @param int $type  Type of compression to use ignored for ZIP
+     * @return mixed
+     */
+    public function setCompression($level = 9, $type = Archive::COMPRESS_AUTO)
+    {
+        $this->complevel = $level;
+    }
 
     /**
      * Open an existing ZIP file for reading
@@ -244,10 +262,17 @@ class Zip
      *
      * @param string          $file     path to the original file
      * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
-     * @param int             $compress Compression level, 0 for no compression
      * @throws ArchiveIOException
      */
-    public function addFile($file, $fileinfo, $compress = 9)
+
+    /**
+     * Add a file to the current archive using an existing file in the filesystem
+     *
+     * @param string          $file     path to the original file
+     * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
+     * @throws ArchiveIOException
+     */
+    public function addFile($file, $fileinfo = '')
     {
         if (is_string($fileinfo)) {
             $fileinfo = FileInfo::fromPath($file, $fileinfo);
@@ -263,7 +288,7 @@ class Zip
         }
 
         // FIXME could we stream writing compressed data? gzwrite on a fopen handle?
-        $this->addData($fileinfo, $data, $compress);
+        $this->addData($fileinfo, $data);
     }
 
     /**
@@ -271,10 +296,9 @@ class Zip
      *
      * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data
      * @param string          $data     binary content of the file to add
-     * @param int             $compress Compression level, 0 for no compression
      * @throws ArchiveIOException
      */
-    public function addData($fileinfo, $data, $compress = 9)
+    public function addData($fileinfo, $data)
     {
         if (is_string($fileinfo)) {
             $fileinfo = new FileInfo($fileinfo);
@@ -295,10 +319,10 @@ class Zip
         );
         $size     = strlen($data);
         $crc      = crc32($data);
-        if ($compress) {
+        if ($this->complevel) {
             $fmagic = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00";
             $cmagic = "\x50\x4b\x01\x02\x00\x00\x14\x00\x00\x00\x08\x00";
-            $data   = gzcompress($data, $compress);
+            $data   = gzcompress($data, $this->complevel);
             $data   = substr($data, 2, -4); // strip compression headers
         } else {
             $fmagic = "\x50\x4b\x03\x04\x0a\x00\x00\x00\x00\x00";

@@ -55,7 +55,7 @@ echo $tar->getArchive(Archive::COMPRESS_GZIP); // compresses and returns it
 ```
 
 Differences between Tar and Zip: Tars are compressed as a whole while Zips compress each file individually. Therefore
-```Zip``` accepts an additional compression level parameter in the ```addFile()``` and ```addData()``` functions.
+you can call ```setCompression``` before each ```addFile()``` and ```addData()``` functions.
 
 The FileInfo class can be used to specify additional info like ownership or permissions when adding a file to
 an archive. 

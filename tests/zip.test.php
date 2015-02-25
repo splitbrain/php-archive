@@ -28,9 +28,10 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $tdir = ltrim($dir, '/');
 
         $zip->create();
-        $zip->AddFile("$dir/testdata1.txt", "$dir/testdata1.txt", 0);
-        $zip->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt', 0);
-        $zip->addData('another/testdata3.txt', 'testcontent3', 0, 0);
+        $zip->setCompression(0);
+        $zip->AddFile("$dir/testdata1.txt", "$dir/testdata1.txt");
+        $zip->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
+        $zip->addData('another/testdata3.txt', 'testcontent3');
 
         $data = $zip->getArchive();
 
@@ -67,6 +68,7 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $tmp  = tempnam(sys_get_temp_dir(), 'dwziptest');
 
         $zip->create($tmp);
+        $zip->setCompression(0);
         $zip->AddFile("$dir/testdata1.txt", "$dir/testdata1.txt", 0);
         $zip->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt', 0);
         $zip->addData('another/testdata3.txt', 'testcontent3', 0, 0);

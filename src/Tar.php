@@ -27,11 +27,11 @@ class Tar extends Archive
     /**
      * Sets the compression to use
      *
-     * @param int $type  Type of compression to use (use COMPRESS_* constants)
      * @param int $level Compression level (0 to 9)
+     * @param int $type  Type of compression to use (use COMPRESS_* constants)
      * @return mixed
      */
-    public function setCompression($type = Archive::COMPRESS_AUTO, $level = 9)
+    public function setCompression($level = 9, $type = Archive::COMPRESS_AUTO)
     {
         $this->compressioncheck($type);
         $this->comptype  = $type;
@@ -50,7 +50,7 @@ class Tar extends Archive
 
         // update compression to mach file
         if ($this->comptype == Tar::COMPRESS_AUTO) {
-            $this->setCompression($this->filetype($file), $this->complevel);
+            $this->setCompression($this->complevel, $this->filetype($file));
         }
 
         // open file handles
@@ -206,7 +206,7 @@ class Tar extends Archive
         if ($this->file) {
             // determine compression
             if ($this->comptype == Archive::COMPRESS_AUTO) {
-                $this->setCompression($this->filetype($file), $this->complevel);
+                $this->setCompression($this->complevel, $this->filetype($file));
             }
 
             if ($this->comptype === Archive::COMPRESS_GZIP) {
@@ -366,7 +366,7 @@ class Tar extends Archive
     public function save($file)
     {
         if ($this->comptype === Archive::COMPRESS_AUTO) {
-            $this->setCompression($this->filetype($file), $this->complevel);
+            $this->setCompression($this->filetype($this->complevel, $file));
         }
 
         if (!file_put_contents($file, $this->getArchive())) {

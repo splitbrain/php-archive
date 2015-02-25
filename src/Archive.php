@@ -11,11 +11,13 @@ abstract class Archive
     const COMPRESS_BZIP = 2;
 
     /**
-     * @param int $type  Type of compression to use (use COMPRESS_* constants)
+     * Set the compression level and type
+     *
      * @param int $level Compression level (0 to 9)
+     * @param int $type  Type of compression to use (use COMPRESS_* constants)
      * @return mixed
      */
-    abstract public function setCompression($type = Archive::COMPRESS_AUTO, $level = 9);
+    abstract public function setCompression($level = 9, $type = Archive::COMPRESS_AUTO);
 
     /**
      * Open an existing archive file for reading
