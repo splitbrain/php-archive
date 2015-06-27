@@ -7,6 +7,8 @@ namespace splitbrain\PHPArchive;
  *
  * Creates or extracts Zip archives
  *
+ * @see        Official ZIP file format: http://www.pkware.com/support/zip-app-note
+ *
  * @author  Andreas Gohr <andi@splitbrain.org>
  * @package splitbrain\PHPArchive
  * @license MIT
@@ -320,32 +322,67 @@ class Zip extends Archive
         $size     = strlen($data);
         $crc      = crc32($data);
         if ($this->complevel) {
-            $fmagic = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00";
-            $cmagic = "\x50\x4b\x01\x02\x00\x00\x14\x00\x00\x00\x08\x00";
+            // Local file header:
+            $fmagic  = "\x50\x4b\x03\x04";   // local file header signature     4 bytes  (0x04034b50)
+            $fmagic .= "\x14\x00";           // version needed to extract       2 bytes
+            $fmagic .= "\x00\x00";           // general purpose bit flag        2 bytes
+            $fmagic .= "\x08\x00";           // compression method              2 bytes
+            // Central directory structure:
+            $cmagic  = "\x50\x4b\x01\x02";   // central file header signature   4 bytes  (0x02014b50)
+            $cmagic .= "\x00\x00";           // version made by                 2 bytes
+            $cmagic .= "\x14\x00";           // version needed to extract       2 bytes
+            $cmagic .= "\x00\x00";           // general purpose bit flag        2 bytes
+            $cmagic .= "\x08\x00";           // compression method              2 bytes
+
             $data   = gzcompress($data, $this->complevel);
             $data   = substr($data, 2, -4); // strip compression headers
         } else {
-            $fmagic = "\x50\x4b\x03\x04\x0a\x00\x00\x00\x00\x00";
-            $cmagic = "\x50\x4b\x01\x02\x14\x00\x0a\x00\x00\x00\x00\x00";
+            // Local file header:
+            $fmagic  = "\x50\x4b\x03\x04";   // local file header signature     4 bytes  (0x04034b50)
+            $fmagic .= "\x0a\x00";           // version needed to extract       2 bytes
+            $fmagic .= "\x00\x00";           // general purpose bit flag        2 bytes
+            $fmagic .= "\x00\x00";           // compression method              2 bytes
+            // Central directory structure:
+            $cmagic = "\x50\x4b\x01\x02";    // central file header signature   4 bytes  (0x02014b50)
+            $cmagic = "\x14\x00";            // version made by                 2 bytes
+            $cmagic = "\x0a\x00";            // version needed to extract       2 bytes
+            $cmagic = "\x00\x00";            // general purpose bit flag        2 bytes
+            $cmagic = "\x00\x00";            // compression method              2 bytes
         }
         $csize  = strlen($data);
         $offset = $this->dataOffset();
         $name   = $fileinfo->getPath();
 
         // write data
-        $this->writebytes($fmagic);
-        $this->writebytes($hexdtime);
-        $this->writebytes(pack('V', $crc).pack('V', $csize).pack('V', $size)); //pre header
-        $this->writebytes(pack('v', strlen($name)).pack('v', 0).$name.$data); //file data
-        $this->writebytes(pack('V', $crc).pack('V', $csize).pack('V', $size)); //post header
+        $this->writebytes($fmagic);                     // ... Local file header
+        $this->writebytes($hexdtime);                   // last mod file time              2 bytes  + last mod file date              2 bytes
+        $this->writebytes(pack('V', $crc));             // crc-32                          4 bytes
+        $this->writebytes(pack('V', $csize));           // compressed size                 4 bytes
+        $this->writebytes(pack('V', $size));            // uncompressed size               4 bytes
+        $this->writebytes(pack('v', strlen($name)));    // file name length                2 bytes
+        $this->writebytes(pack('v', 0));                // extra field length              2 bytes
+        $this->writebytes($name);                       // file name                       (variable size)
+        //                                              // extra field                     (variable size)
+        $this->writebytes($data);
+        //BUG $this->writebytes(pack('V', $crc));
+        //BUG $this->writebytes(pack('V', $csize));
+        //BUG $this->writebytes(pack('V', $size));
 
         // add info to central file directory
-        $cdrec = $cmagic;
-        $cdrec .= $hexdtime.pack('V', $crc).pack('V', $csize).pack('V', $size);
-        $cdrec .= pack('v', strlen($name)).pack('v', 0).pack('v', 0);
-        $cdrec .= pack('v', 0).pack('v', 0).pack('V', 32);
-        $cdrec .= pack('V', $offset);
-        $cdrec .= $name;
+        $cdrec = $cmagic;                       // ... Central directory structure
+        $cdrec .= $hexdtime;                    // last mod file time              2 bytes  + last mod file date              2 bytes
+        $cdrec .= pack('V', $crc);              // crc-32                          4 bytes
+        $cdrec .= pack('V', $csize);            // compressed size                 4 bytes
+        $cdrec .= pack('V', $size);             // uncompressed size               4 bytes
+        $cdrec .= pack('v', strlen($name));     // file name length                2 bytes
+        $cdrec .= pack('v', 0);                 // extra field length              2 bytes
+        $cdrec .= pack('v', 0);                 // file comment length             2 bytes
+        $cdrec .= pack('v', 0);                 // disk number start               2 bytes
+        $cdrec .= pack('v', 0);                 // internal file attributes        2 bytes
+        $cdrec .= pack('V', 32);                // external file attributes        4 bytes
+        $cdrec .= pack('V', $offset);           // relative offset of local header 4 bytes
+        $cdrec .= $name;                        // file name                       (variable size)
+        //                                      // extra field                     (variable size)
         $this->ctrl_dir[] = $cdrec;
     }
 
@@ -366,9 +403,16 @@ class Zip extends Archive
             $offset  = $this->dataOffset();
             $ctrldir = join('', $this->ctrl_dir);
             $this->writebytes($ctrldir);
-            $this->writebytes("\x50\x4b\x05\x06\x00\x00\x00\x00"); // EOF CTRL DIR
-            $this->writebytes(pack('v', count($this->ctrl_dir)).pack('v', count($this->ctrl_dir)));
-            $this->writebytes(pack('V', strlen($ctrldir)).pack('V', strlen($offset))."\x00\x00");
+            // End of central directory record:
+            $this->writebytes("\x50\x4b\x05\x06");                     // end of central dir signature                                                   4 bytes  (0x06054b50)
+            $this->writebytes("\x00\x00");                             // number of this disk                                                            2 bytes
+            $this->writebytes("\x00\x00");                             // number of the disk with the start of the central directory                     2 bytes
+            $this->writebytes(pack('v', count($this->ctrl_dir)));      // total number of entries in the central directory on this disk                  2 bytes
+            $this->writebytes(pack('v', count($this->ctrl_dir)));      // total number of entries in the central directory                               2 bytes
+            $this->writebytes(pack('V', strlen($ctrldir)));            // size of the central directory                                                  4 bytes
+            $this->writebytes(pack('V', $offset));                     // offset of start of central directory with respect to the starting disk number  4 bytes
+            $this->writebytes("\x00\x00");                             // .ZIP file comment length                                                       2 bytes
+            //                                                         // .ZIP file comment                                                              (variable size)
             $this->ctrl_dir = array();
         }
 
@@ -492,17 +536,7 @@ class Zip extends Archive
             $header['comment'] = '';
         }
 
-        if ($header['mdate'] && $header['mtime']) {
-            $hour            = ($header['mtime'] & 0xF800) >> 11;
-            $minute          = ($header['mtime'] & 0x07E0) >> 5;
-            $seconde         = ($header['mtime'] & 0x001F) * 2;
-            $year            = (($header['mdate'] & 0xFE00) >> 9) + 1980;
-            $month           = ($header['mdate'] & 0x01E0) >> 5;
-            $day             = $header['mdate'] & 0x001F;
-            $header['mtime'] = mktime($hour, $minute, $seconde, $month, $day, $year);
-        } else {
-            $header['mtime'] = time();
-        }
+        $header['mtime'] = $this->makeUnixTime($header['mdate'], $header['mtime']);
 
         $header['stored_filename'] = $header['filename'];
         $header['status']          = 'ok';
@@ -552,17 +586,7 @@ class Zip extends Archive
         $header['mdate'] = $data['mdate'];
         $header['mtime'] = $data['mtime'];
 
-        if ($header['mdate'] && $header['mtime']) {
-            $hour            = ($header['mtime'] & 0xF800) >> 11;
-            $minute          = ($header['mtime'] & 0x07E0) >> 5;
-            $seconde         = ($header['mtime'] & 0x001F) * 2;
-            $year            = (($header['mdate'] & 0xFE00) >> 9) + 1980;
-            $month           = ($header['mdate'] & 0x01E0) >> 5;
-            $day             = $header['mdate'] & 0x001F;
-            $header['mtime'] = mktime($hour, $minute, $seconde, $month, $day, $year);
-        } else {
-            $header['mtime'] = time();
-        }
+        $header['mtime'] = $this->makeUnixTime($header['mdate'], $header['mtime']);
 
         $header['stored_filename'] = $header['filename'];
         $header['status']          = "ok";
@@ -644,11 +668,35 @@ class Zip extends Archive
             $timearray['seconds'] = 0;
         }
         return (($timearray['year'] - 1980) << 25) |
-        ($timearray['mon'] << 21) |
-        ($timearray['mday'] << 16) |
-        ($timearray['hours'] << 11) |
-        ($timearray['minutes'] << 5) |
-        ($timearray['seconds'] >> 1);
+                ($timearray['mon']          << 21) |
+                ($timearray['mday']         << 16) |
+                ($timearray['hours']        << 11) |
+                ($timearray['minutes']      <<  5) |
+                ($timearray['seconds']      >>  1);
+    }
+
+    /**
+     * Create a UNIX timestamp from a DOS timestamp
+     *
+     * @param $mdate
+     * @param $mtime
+     * @return int
+     */
+    protected function makeUnixTime($mdate = NULL, $mtime = NULL)
+    {
+        if ($mdate && $mtime) {
+            $year      = (($mdate & 0xFE00) >>  9) + 1980;
+            $month     =  ($mdate & 0x01E0) >>  5;
+            $day       =   $mdate & 0x001F;
+
+            $hour      =  ($mtime & 0xF800) >> 11;
+            $minute    =  ($mtime & 0x07E0) >>  5;
+            $seconde   =  ($mtime & 0x001F) <<  1;
+
+            $mtime = mktime($hour, $minute, $seconde, $month, $day, $year);
+        } else {
+            $mtime = time();
+        }
     }
 
 }
