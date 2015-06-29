@@ -7,6 +7,8 @@ namespace splitbrain\PHPArchive;
  *
  * Creates or extracts Zip archives
  *
+ * for specs see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+ *
  * @author  Andreas Gohr <andi@splitbrain.org>
  * @package splitbrain\PHPArchive
  * @license MIT
@@ -308,45 +310,45 @@ class Zip extends Archive
             throw new ArchiveIOException('Archive has been closed, files can no longer be added');
         }
 
-        // prepare the various header infos
-        $dtime    = dechex($this->makeDosTime($fileinfo->getMtime()));
-        $hexdtime = pack(
-            'H*',
-            $dtime[6].$dtime[7].
-            $dtime[4].$dtime[5].
-            $dtime[2].$dtime[3].
-            $dtime[0].$dtime[1]
-        );
+        // prepare info and compress data
         $size     = strlen($data);
         $crc      = crc32($data);
         if ($this->complevel) {
-            $fmagic = "\x50\x4b\x03\x04\x14\x00\x00\x00\x08\x00";
-            $cmagic = "\x50\x4b\x01\x02\x00\x00\x14\x00\x00\x00\x08\x00";
-            $data   = gzcompress($data, $this->complevel);
-            $data   = substr($data, 2, -4); // strip compression headers
-        } else {
-            $fmagic = "\x50\x4b\x03\x04\x0a\x00\x00\x00\x00\x00";
-            $cmagic = "\x50\x4b\x01\x02\x14\x00\x0a\x00\x00\x00\x00\x00";
+            $data = gzcompress($data, $this->complevel);
+            $data = substr($data, 2, -4); // strip compression headers
         }
         $csize  = strlen($data);
         $offset = $this->dataOffset();
         $name   = $fileinfo->getPath();
+        $time   = $fileinfo->getMtime();
+
+        // write local file header
+        $this->writebytes($this->getLocalFileHeader(
+            $time,
+            $crc,
+            $size,
+            $csize,
+            $name,
+            (bool) $this->complevel
+        ));
+
+        // we store no encryption header
 
         // write data
-        $this->writebytes($fmagic);
-        $this->writebytes($hexdtime);
-        $this->writebytes(pack('V', $crc).pack('V', $csize).pack('V', $size)); //pre header
-        $this->writebytes(pack('v', strlen($name)).pack('v', 0).$name.$data); //file data
-        $this->writebytes(pack('V', $crc).pack('V', $csize).pack('V', $size)); //post header
+        $this->writebytes($data);
+
+        // we store no data descriptor
 
         // add info to central file directory
-        $cdrec = $cmagic;
-        $cdrec .= $hexdtime.pack('V', $crc).pack('V', $csize).pack('V', $size);
-        $cdrec .= pack('v', strlen($name)).pack('v', 0).pack('v', 0);
-        $cdrec .= pack('v', 0).pack('v', 0).pack('V', 32);
-        $cdrec .= pack('V', $offset);
-        $cdrec .= $name;
-        $this->ctrl_dir[] = $cdrec;
+        $this->ctrl_dir[] = $this->getCentralFileRecord(
+            $offset,
+            $time,
+            $crc,
+            $size,
+            $csize,
+            $name,
+            (bool) $this->complevel
+        );
     }
 
     /**
@@ -518,12 +520,12 @@ class Zip extends Archive
      * Reads the local file header
      *
      * This header precedes each individual file inside the zip file. Assumes the current file pointer is pointing at
-     * the right position already. Enhances this given central header with the data found at the local header.
+     * the right position already. Enhances the given central header with the data found at the local header.
      *
      * @param array $header the central file header read previously (see above)
      * @return array
      */
-    function readFileHeader($header)
+    protected function readFileHeader($header)
     {
         $binary_data = fread($this->fh, 30);
         $data        = unpack(
@@ -651,4 +653,85 @@ class Zip extends Archive
         ($timearray['seconds'] >> 1);
     }
 
+    /**
+     * Returns a local file header for the given data
+     *
+     * @param int $offset location of the local header
+     * @param int $ts unix timestamp
+     * @param int $crc CRC32 checksum of the uncompressed data
+     * @param int $len length of the uncompressed data
+     * @param int $clen length of the compressed data
+     * @param string $name file name
+     * @param boolean|null $comp if compression is used, if null it's determined from $len != $clen
+     * @return string
+     */
+    protected function getCentralFileRecord($offset, $ts, $crc, $len, $clen, $name, $comp = null)
+    {
+        if(is_null($comp)) $comp = $len != $clen;
+        $comp = $comp ? 8 : 0;
+        $dtime = dechex($this->makeDosTime($ts));
+
+        $header = "\x50\x4b\x01\x02"; // central file header signature
+        $header .= pack('v', 14); // version made by - VFAT
+        $header .= pack('v', 20); // version needed to extract - 2.0
+        $header .= pack('v', 0); // general purpose flag - no flags set
+        $header .= pack('v', $comp); // compression method - deflate|none
+        $header .= pack(
+            'H*',
+            $dtime[6] . $dtime[7] .
+            $dtime[4] . $dtime[5] .
+            $dtime[2] . $dtime[3] .
+            $dtime[0] . $dtime[1]
+        ); //  last mod file time and date
+        $header .= pack('V', $crc); // crc-32
+        $header .= pack('V', $clen); // compressed size
+        $header .= pack('V', $len); // uncompressed size
+        $header .= pack('v', strlen($name)); // file name length
+        $header .= pack('v', 0); // extra field length
+        $header .= pack('v', 0); // file comment length
+        $header .= pack('v', 0); // disk number start
+        $header .= pack('v', 0); // internal file attributes
+        $header .= pack('V', 0); // external file attributes  @todo was 0x32!?
+        $header .= pack('V', $offset); // relative offset of local header
+        $header .= $name; // file name
+
+        return $header;
+    }
+
+    /**
+     * Returns a local file header for the given data
+     *
+     * @param int $ts unix timestamp
+     * @param int $crc CRC32 checksum of the uncompressed data
+     * @param int $len length of the uncompressed data
+     * @param int $clen length of the compressed data
+     * @param string $name file name
+     * @param boolean|null $comp if compression is used, if null it's determined from $len != $clen
+     * @return string
+     */
+    protected function getLocalFileHeader($ts, $crc, $len, $clen, $name, $comp = null)
+    {
+        if(is_null($comp)) $comp = $len != $clen;
+        $comp = $comp ? 8 : 0;
+        $dtime = dechex($this->makeDosTime($ts));
+
+        $header = "\x50\x4b\x03\x04"; //  local file header signature
+        $header .= pack('v', 20); // version needed to extract - 2.0
+        $header .= pack('v', 0); // general purpose flag - no flags set
+        $header .= pack('v', $comp); // compression method - deflate|none
+        $header .= pack(
+            'H*',
+            $dtime[6] . $dtime[7] .
+            $dtime[4] . $dtime[5] .
+            $dtime[2] . $dtime[3] .
+            $dtime[0] . $dtime[1]
+        ); //  last mod file time and date
+        $header .= pack('V', $crc); // crc-32
+        $header .= pack('V', $clen); // compressed size
+        $header .= pack('V', $len); // uncompressed size
+        $header .= pack('v', strlen($name)); // file name length
+        $header .= pack('v', 0); // extra field length
+        $header .= $name;
+        return $header;
+    }
 }
