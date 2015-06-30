@@ -363,14 +363,24 @@ class Zip extends Archive
             return;
         } // we did this already
 
-        // write footer
         if ($this->writeaccess) {
-            $offset  = $this->dataOffset();
+            // write central directory
+            $offset = $this->dataOffset();
             $ctrldir = join('', $this->ctrl_dir);
             $this->writebytes($ctrldir);
-            $this->writebytes("\x50\x4b\x05\x06\x00\x00\x00\x00"); // EOF CTRL DIR
-            $this->writebytes(pack('v', count($this->ctrl_dir)).pack('v', count($this->ctrl_dir)));
-            $this->writebytes(pack('V', strlen($ctrldir)).pack('V', strlen($offset))."\x00\x00");
+
+            // write end of central directory record
+            $this->writebytes("\x50\x4b\x05\x06"); // end of central dir signature
+            $this->writebytes(pack('v', 0)); // number of this disk
+            $this->writebytes(pack('v', 0)); // number of the disk with the start of the central directory
+            $this->writebytes(pack('v',
+                count($this->ctrl_dir))); // total number of entries in the central directory on this disk
+            $this->writebytes(pack('v', count($this->ctrl_dir))); // total number of entries in the central directory
+            $this->writebytes(pack('V', strlen($ctrldir))); // size of the central directory
+            $this->writebytes(pack('V',
+                $offset)); // offset of start of central directory with respect to the starting disk number
+            $this->writebytes(pack('v', 0)); // .ZIP file comment length
+
             $this->ctrl_dir = array();
         }
 
