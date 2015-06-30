@@ -323,7 +323,7 @@ class Zip extends Archive
         $time   = $fileinfo->getMtime();
 
         // write local file header
-        $this->writebytes($this->getLocalFileHeader(
+        $this->writebytes($this->makeLocalFileHeader(
             $time,
             $crc,
             $size,
@@ -340,7 +340,7 @@ class Zip extends Archive
         // we store no data descriptor
 
         // add info to central file directory
-        $this->ctrl_dir[] = $this->getCentralFileRecord(
+        $this->ctrl_dir[] = $this->makeCentralFileRecord(
             $offset,
             $time,
             $crc,
@@ -665,7 +665,7 @@ class Zip extends Archive
      * @param boolean|null $comp if compression is used, if null it's determined from $len != $clen
      * @return string
      */
-    protected function getCentralFileRecord($offset, $ts, $crc, $len, $clen, $name, $comp = null)
+    protected function makeCentralFileRecord($offset, $ts, $crc, $len, $clen, $name, $comp = null)
     {
         if(is_null($comp)) $comp = $len != $clen;
         $comp = $comp ? 8 : 0;
@@ -709,7 +709,7 @@ class Zip extends Archive
      * @param boolean|null $comp if compression is used, if null it's determined from $len != $clen
      * @return string
      */
-    protected function getLocalFileHeader($ts, $crc, $len, $clen, $name, $comp = null)
+    protected function makeLocalFileHeader($ts, $crc, $len, $clen, $name, $comp = null)
     {
         if(is_null($comp)) $comp = $len != $clen;
         $comp = $comp ? 8 : 0;
