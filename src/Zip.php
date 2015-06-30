@@ -7,7 +7,7 @@ namespace splitbrain\PHPArchive;
  *
  * Creates or extracts Zip archives
  *
- * for specs see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+ * for specs see http://www.pkware.com/appnote
  *
  * @author  Andreas Gohr <andi@splitbrain.org>
  * @package splitbrain\PHPArchive
