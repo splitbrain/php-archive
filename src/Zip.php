@@ -504,18 +504,7 @@ class Zip extends Archive
             $header['comment'] = '';
         }
 
-        if ($header['mdate'] && $header['mtime']) {
-            $hour            = ($header['mtime'] & 0xF800) >> 11;
-            $minute          = ($header['mtime'] & 0x07E0) >> 5;
-            $seconde         = ($header['mtime'] & 0x001F) * 2;
-            $year            = (($header['mdate'] & 0xFE00) >> 9) + 1980;
-            $month           = ($header['mdate'] & 0x01E0) >> 5;
-            $day             = $header['mdate'] & 0x001F;
-            $header['mtime'] = mktime($hour, $minute, $seconde, $month, $day, $year);
-        } else {
-            $header['mtime'] = time();
-        }
-
+        $header['mtime']           = $this->makeUnixTime($header['mdate'], $header['mtime']);
         $header['stored_filename'] = $header['filename'];
         $header['status']          = 'ok';
         if (substr($header['filename'], -1) == '/') {
@@ -561,20 +550,7 @@ class Zip extends Archive
             }
         }
         $header['flag']  = $data['flag'];
-        $header['mdate'] = $data['mdate'];
-        $header['mtime'] = $data['mtime'];
-
-        if ($header['mdate'] && $header['mtime']) {
-            $hour            = ($header['mtime'] & 0xF800) >> 11;
-            $minute          = ($header['mtime'] & 0x07E0) >> 5;
-            $seconde         = ($header['mtime'] & 0x001F) * 2;
-            $year            = (($header['mdate'] & 0xFE00) >> 9) + 1980;
-            $month           = ($header['mdate'] & 0x01E0) >> 5;
-            $day             = $header['mdate'] & 0x001F;
-            $header['mtime'] = mktime($hour, $minute, $seconde, $month, $day, $year);
-        } else {
-            $header['mtime'] = time();
-        }
+        $header['mtime'] = $this->makeUnixTime($data['mdate'], $data['mtime']);
 
         $header['stored_filename'] = $header['filename'];
         $header['status']          = "ok";
@@ -661,6 +637,32 @@ class Zip extends Archive
         ($timearray['hours'] << 11) |
         ($timearray['minutes'] << 5) |
         ($timearray['seconds'] >> 1);
+    }
+
+    /**
+     * Create a UNIX timestamp from a DOS timestamp
+     *
+     * @param $mdate
+     * @param $mtime
+     * @return int
+     */
+    protected function makeUnixTime($mdate = null, $mtime = null)
+    {
+        if ($mdate && $mtime) {
+            $year = (($mdate & 0xFE00) >> 9) + 1980;
+            $month = ($mdate & 0x01E0) >> 5;
+            $day = $mdate & 0x001F;
+
+            $hour = ($mtime & 0xF800) >> 11;
+            $minute = ($mtime & 0x07E0) >> 5;
+            $seconde = ($mtime & 0x001F) << 1;
+
+            $mtime = mktime($hour, $minute, $seconde, $month, $day, $year);
+        } else {
+            $mtime = time();
+        }
+
+        return $mtime;
     }
 
     /**
