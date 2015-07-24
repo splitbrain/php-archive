@@ -140,6 +140,10 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists($out.'/zip/foobar/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/zip/foobar/testdata2.txt'), "Extracted $file");
 
+        $this->assertFileExists($out.'/zip/compressable.txt', "Extracted $file");
+        $this->assertEquals(1836, filesize($out.'/zip/compressable.txt'), "Extracted $file");
+        $this->assertFileNotExists($out.'/zip/compressable.txt.gz', "Extracted $file");
+
         self::rdelete($out);
     }
 
