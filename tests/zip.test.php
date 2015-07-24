@@ -110,12 +110,12 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $zip->open($file);
         $content = $zip->contents();
 
-        $this->assertCount(4, $content, "Contents of $file");
-        $this->assertEquals('zip/testdata1.txt', $content[1]->getPath(), "Contents of $file");
-        $this->assertEquals(13, $content[1]->getSize(), "Contents of $file");
+        $this->assertCount(5, $content, "Contents of $file");
+        $this->assertEquals('zip/testdata1.txt', $content[2]->getPath(), "Contents of $file");
+        $this->assertEquals(13, $content[2]->getSize(), "Contents of $file");
 
-        $this->assertEquals('zip/foobar/testdata2.txt', $content[3]->getPath(), "Contents of $file");
-        $this->assertEquals(13, $content[3]->getSize(), "Contents of $file");
+        $this->assertEquals('zip/foobar/testdata2.txt', $content[4]->getPath(), "Contents of $file");
+        $this->assertEquals(13, $content[4]->getSize(), "Contents of $file");
     }
 
     /**
