@@ -19,8 +19,11 @@ Usage
 -----
 
 The usage for the Zip and Tar classes are basically the same. Here are some
-examples for working with TARs to get you started. Check the source code
-comments for more info
+examples for working with TARs to get you started.
+
+Check the [API docs](https://splitbrain.github.io/php-archive/) for more
+info.
+
 
 ```php
 require_once 'vendor/autoload.php';
