@@ -305,6 +305,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $dir = dirname(__FILE__).'/tar';
         $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.tgz"));
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype("$dir/test.tbz"));
+        $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.guess"));
     }
 
     /**
