@@ -14,9 +14,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         parent::setUp();
         if (extension_loaded('zlib')) {
             $this->extensions[] = 'tgz';
+            $this->extensions[] = 'tar.gz';
         }
         if (extension_loaded('bz2')) {
             $this->extensions[] = 'tbz';
+            $this->extensions[] = 'tar.bz2';
         }
     }
 
@@ -303,9 +305,12 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype('foo.tar.bz2'));
 
         $dir = dirname(__FILE__).'/tar';
+        $this->assertEquals(Tar::COMPRESS_NONE, $tar->filetype("$dir/test.tar"));
         $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.tgz"));
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype("$dir/test.tbz"));
-        $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.guess"));
+        $this->assertEquals(Tar::COMPRESS_NONE, $tar->filetype("$dir/test.tar.guess"));
+        $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.tgz.guess"));
+        $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype("$dir/test.tbz.guess"));
     }
 
     /**
