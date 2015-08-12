@@ -516,12 +516,13 @@ class Tar extends Archive
      * Decode the given tar file header
      *
      * @param string $block a 512 byte block containign the header data
-     * @return array|bool
+     * @return array
+     * @throws ArchiveCorruptedException
      */
     protected function parseHeader($block)
     {
         if (!$block || strlen($block) != 512) {
-            return false;
+            throw new ArchiveCorruptedException('Unexpected length of header');
         }
 
         for ($i = 0, $chks = 0; $i < 148; $i++) {
@@ -537,12 +538,12 @@ class Tar extends Archive
             $block
         );
         if (!$header) {
-            return false;
+            throw new ArchiveCorruptedException('Failed to parse header');
         }
 
         $return['checksum'] = OctDec(trim($header['checksum']));
         if ($return['checksum'] != $chks) {
-            return false;
+            throw new ArchiveCorruptedException('Header does not match it\'s checksum');
         }
 
         $return['filename'] = trim($header['filename']);
