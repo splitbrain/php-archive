@@ -515,8 +515,8 @@ class Tar extends Archive
     /**
      * Decode the given tar file header
      *
-     * @param string $block a 512 byte block containign the header data
-     * @return array
+     * @param string $block a 512 byte block containing the header data
+     * @return array|false returns false when this was a null block
      * @throws ArchiveCorruptedException
      */
     protected function parseHeader($block)
@@ -524,6 +524,9 @@ class Tar extends Archive
         if (!$block || strlen($block) != 512) {
             throw new ArchiveCorruptedException('Unexpected length of header');
         }
+
+        // null byte blocks are ignored
+        if(trim($block) === '') return false;
 
         for ($i = 0, $chks = 0; $i < 148; $i++) {
             $chks += ord($block[$i]);
