@@ -101,7 +101,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $tdir = ltrim($dir, '/');
         $tmp  = tempnam(sys_get_temp_dir(), 'dwtartest');
 
-        $tar->create($tmp, Tar::COMPRESS_NONE);
+        $tar->create($tmp);
         $tar->AddFile("$dir/testdata1.txt");
         $tar->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
         $tar->addData('another/testdata3.txt', 'testcontent3');
@@ -332,11 +332,12 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     public function test_createlongfile()
     {
         $tar = new Tar();
+        $tar->setCompression(0);
         $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
 
         $path = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789.txt';
 
-        $tar->create($tmp, Tar::COMPRESS_NONE);
+        $tar->create($tmp);
         $tar->addData($path, 'testcontent1');
         $tar->close();
 
@@ -354,6 +355,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     public function test_createlongpathustar()
     {
         $tar = new Tar();
+        $tar->setCompression(0);
         $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
 
         $path = '';
@@ -362,7 +364,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         }
         $path = rtrim($path, '/');
 
-        $tar->create($tmp, Tar::COMPRESS_NONE);
+        $tar->create($tmp);
         $tar->addData("$path/test.txt", 'testcontent1');
         $tar->close();
 
@@ -382,6 +384,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     public function test_createlongpathgnu()
     {
         $tar = new Tar();
+        $tar->setCompression(0);
         $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
 
         $path = '';
@@ -390,7 +393,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         }
         $path = rtrim($path, '/');
 
-        $tar->create($tmp, Tar::COMPRESS_NONE);
+        $tar->create($tmp);
         $tar->addData("$path/test.txt", 'testcontent1');
         $tar->close();
 
@@ -437,9 +440,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     {
         $dir = dirname(__FILE__).'/tar';
         $tar = new Tar();
+        $tar->setCompression(0);
         $tar->create();
         $tar->addFile("$dir/zero.txt", 'zero.txt');
-        $file = $tar->getArchive(Tar::COMPRESS_NONE);
+        $file = $tar->getArchive();
 
         $this->assertEquals(512 * 3, strlen($file)); // 1 header block + 2 footer blocks
     }
@@ -447,9 +451,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     public function test_zerodata()
     {
         $tar = new Tar();
+        $tar->setCompression(0);
         $tar->create();
         $tar->addData('zero.txt', '');
-        $file = $tar->getArchive(Tar::COMPRESS_NONE);
+        $file = $tar->getArchive();
 
         $this->assertEquals(512 * 3, strlen($file)); // 1 header block + 2 footer blocks
     }
@@ -461,9 +466,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     {
         $dir = dirname(__FILE__).'/tar';
         $tar = new Tar();
+        $tar->setCompression(0);
         $tar->create();
         $tar->addFile("$dir/block.txt", 'block.txt');
-        $file = $tar->getArchive(Tar::COMPRESS_NONE);
+        $file = $tar->getArchive();
 
         $this->assertEquals(512 * 4, strlen($file)); // 1 header block + data block + 2 footer blocks
     }
@@ -471,9 +477,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     public function test_blockdata()
     {
         $tar = new Tar();
+        $tar->setCompression(0);
         $tar->create();
         $tar->addData('block.txt', str_pad('', 512, 'x'));
-        $file = $tar->getArchive(Tar::COMPRESS_NONE);
+        $file = $tar->getArchive();
 
         $this->assertEquals(512 * 4, strlen($file)); // 1 header block + data block + 2 footer blocks
     }

@@ -54,12 +54,13 @@ $tar->close();
 // To create a TAR archive directly in memory, create() it, add*()
 // files and then either save() or getArchive() it:
 $tar = new Tar();
+$tar->setCompression(9, Archive::COMPRESS_BZIP);
 $tar->create();
 $tar->addFile(...);
 $tar->addData(...);
 ...
-$tar->save('myfile.tgz'); // compresses and saves it
-echo $tar->getArchive(Archive::COMPRESS_GZIP); // compresses and returns it
+$tar->save('myfile.tbz'); // compresses and saves it
+echo $tar->getArchive(); // compresses and returns it
 ```
 
 Differences between Tar and Zip: Tars are compressed as a whole, while Zips compress each file individually. Therefore
