@@ -119,6 +119,38 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Create an archive and unpack it again
+     */
+    public function test_dogfood()
+    {
+
+        $input = glob(dirname(__FILE__) . '/../src/*');
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+
+        $zip = new Zip();
+        $zip->create($archive);
+        foreach($input as $path) {
+            $file = basename($path);
+            $zip->addFile($path, $file);
+        }
+        $zip->close();
+        $this->assertFileExists($archive);
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($extract, '', '/FileInfo\\.php/', '/.*\\.php/');
+
+        $this->assertFileExists("$extract/Tar.php");
+        $this->assertFileExists("$extract/Zip.php");
+        $this->assertFileNotExists("$extract/FileInfo.php");
+
+        self::rdelete($extract);
+        unlink($archive);
+
+    }
+
+    /**
      * Extract the prebuilt zip files
      */
     public function test_zipextract()
