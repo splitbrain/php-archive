@@ -366,7 +366,7 @@ class Tar extends Archive
     public function save($file)
     {
         if ($this->comptype === Archive::COMPRESS_AUTO) {
-            $this->setCompression($this->filetype($this->complevel, $file));
+            $this->setCompression($this->complevel, $this->filetype($file));
         }
 
         if (!file_put_contents($file, $this->getArchive())) {
