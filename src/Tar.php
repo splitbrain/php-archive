@@ -431,7 +431,12 @@ class Tar extends Archive
             @gzseek($this->fh, $bytes, SEEK_CUR);
         } elseif ($this->comptype === Archive::COMPRESS_BZIP) {
             // there is no seek in bzip2, we simply read on
-            @bzread($this->fh, $bytes);
+            // bzread allows to read a max of 8kb at once
+            while($bytes) {
+                $toread = min(8192, $bytes);
+                @bzread($this->fh, $toread);
+                $bytes -= $toread;
+            }
         } else {
             @fseek($this->fh, $bytes, SEEK_CUR);
         }

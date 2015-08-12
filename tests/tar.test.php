@@ -156,6 +156,37 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Create an archive and unpack it again
+     */
+    public function test_dogfood() {
+        foreach ($this->extensions as $ext) {
+            $input = glob(dirname(__FILE__) . '/../src/*');
+            $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
+            $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
+
+            $tar = new Tar();
+            $tar->create($archive);
+            foreach($input as $path) {
+                $file = basename($path);
+                $tar->addFile($path, $file);
+            }
+            $tar->close();
+            $this->assertFileExists($archive);
+
+            $tar = new Tar();
+            $tar->open($archive);
+            $tar->extract($extract, '', '/FileInfo\\.php/', '/.*\\.php/');
+
+            $this->assertFileExists("$extract/Tar.php");
+            $this->assertFileExists("$extract/Zip.php");
+            $this->assertFileNotExists("$extract/FileInfo.php");
+
+            self::rdelete($extract);
+            unlink($archive);
+        }
+    }
+
+    /**
      * Extract the prebuilt tar files
      */
     public function test_tarextract()
