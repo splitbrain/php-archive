@@ -36,6 +36,8 @@ class Tar extends Archive
         $this->compressioncheck($type);
         $this->comptype  = $type;
         $this->complevel = $level;
+        if($level == 0) $this->comptype = Archive::COMPRESS_NONE;
+        if($type == Archive::COMPRESS_NONE) $this->complevel = 0;
     }
 
     /**
