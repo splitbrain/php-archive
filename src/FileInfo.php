@@ -57,9 +57,9 @@ class FileInfo
         $file = new FileInfo();
         
         if(is_dir($path))
-			$size = 0;
-		else
-			$size = filesize($path);
+		$size = 0;
+	else
+		$size = filesize($path);
         
         $file->setPath($path);
         $file->setIsdir(is_dir($path));
