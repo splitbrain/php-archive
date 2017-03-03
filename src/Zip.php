@@ -655,9 +655,9 @@ class Zip extends Archive
     {
         // try iconv first
         if (function_exists('iconv')) {
-            $string = @iconv('UTF-8', 'CP437//IGNORE', $string);
+            $conv = @iconv('UTF-8', 'CP437//IGNORE', $string);
+            if($conv) return $conv; // it worked
         }
-        if($string) return $string; // it worked
 
         // still here? iconv failed to convert the string. Try another method
         // see http://php.net/manual/en/function.iconv.php#108643
