@@ -295,7 +295,7 @@ class Zip extends Archive
     }
 
     /**
-     * Add a file to the current TAR archive using the given $data as content
+     * Add a file to the current Zip archive using the given $data as content
      *
      * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data
      * @param string          $data     binary content of the file to add
@@ -495,8 +495,10 @@ class Zip extends Archive
 
         if ($header['extra_len'] != 0) {
             $header['extra'] = fread($this->fh, $header['extra_len']);
+            $header['extradata'] = $this->parseExtra($header['extra']);
         } else {
             $header['extra'] = '';
+            $header['extradata'] = array();
         }
 
         if ($header['comment_len'] != 0) {
@@ -536,8 +538,10 @@ class Zip extends Archive
         $header['filename'] = fread($this->fh, $data['filename_len']);
         if ($data['extra_len'] != 0) {
             $header['extra'] = fread($this->fh, $data['extra_len']);
+            $header['extradata'] = array_merge($header['extradata'],  $this->parseExtra($header['extra']));
         } else {
             $header['extra'] = '';
+            $header['extradata'] = array();
         }
 
         $header['compression'] = $data['compression'];
@@ -560,6 +564,35 @@ class Zip extends Archive
     }
 
     /**
+     * Parse the extra headers into fields
+     *
+     * @param string $header
+     * @return array
+     */
+    protected function parseExtra($header)
+    {
+        $extra = array();
+        // parse all extra fields as raw values
+        while (strlen($header) !== 0) {
+            $set = unpack('vid/vlen', $header);
+            $header = substr($header, 4);
+            $value = substr($header, 0, $set['len']);
+            $header = substr($header, $set['len']);
+            $extra[$set['id']] = $value;
+        }
+
+        // handle known ones
+        if(isset($extra[0x6375])) {
+            $extra['utf8comment'] = substr($extra[0x7075], 5); // strip version and crc
+        }
+        if(isset($extra[0x7075])) {
+            $extra['utf8path'] = substr($extra[0x7075], 5); // strip version and crc
+        }
+
+        return $extra;
+    }
+
+    /**
      * Create fileinfo object from header data
      *
      * @param $header
@@ -568,13 +601,46 @@ class Zip extends Archive
     protected function header2fileinfo($header)
     {
         $fileinfo = new FileInfo();
-        $fileinfo->setPath($header['filename']);
         $fileinfo->setSize($header['size']);
         $fileinfo->setCompressedSize($header['compressed_size']);
         $fileinfo->setMtime($header['mtime']);
         $fileinfo->setComment($header['comment']);
         $fileinfo->setIsdir($header['external'] == 0x41FF0010 || $header['external'] == 16);
+
+        if(isset($header['extradata']['utf8path'])) {
+            $fileinfo->setPath($header['extradata']['utf8path']);
+        } else {
+            $fileinfo->setPath($this->cp2utf8($header['filename']));
+        }
+
+        if(isset($header['extradata']['utf8comment'])) {
+            $fileinfo->setComment($header['extradata']['utf8comment']);
+        } else {
+            $fileinfo->setComment($this->cp2utf8($header['comment']));
+        }
+
         return $fileinfo;
+    }
+
+    /**
+     * Convert the given CP437 encoded string to UTF-8
+     *
+     * Tries iconv with the correct encoding first, falls back to mbstring with CP850 which is
+     * similar enough. CP437 seems not to be available in mbstring. Lastly falls back to keeping the
+     * string as is, which is still better than nothing.
+     *
+     * @param $string
+     * @return string
+     */
+    protected function cp2utf8($string)
+    {
+        if (function_exists('iconv')) {
+            return iconv('CP437', 'UTF-8', $string);
+        } elseif (function_exists('mb_convert_encoding')) {
+            return mb_convert_encoding($string, 'UTF-8', 'CP850');
+        } else {
+            return $string;
+        }
     }
 
     /**

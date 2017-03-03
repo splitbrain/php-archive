@@ -323,6 +323,27 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         self::rdelete($out);
     }
 
+    public function test_umlautWinrar()
+    {
+        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
+
+        $zip = new Zip();
+        $zip->open(__DIR__ . '/zip/issue14-winrar.zip');
+        $zip->extract($out);
+        $this->assertFileExists("$out/tüst.txt");
+    }
+
+    public function test_umlautWindows()
+    {
+        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
+
+        $zip = new Zip();
+        $zip->open(__DIR__ . '/zip/issue14-windows.zip');
+        $zip->extract($out);
+        $this->assertFileExists("$out/täst.txt");
+    }
+
+
     /**
      * recursive rmdir()/unlink()
      *
