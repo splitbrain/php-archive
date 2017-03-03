@@ -654,7 +654,7 @@ class Zip extends Archive
     protected function utf8ToCp($string)
     {
         if (function_exists('iconv')) {
-            return iconv('UTF-8', 'CP437', $string);
+            return iconv('UTF-8', 'CP437//IGNORE', $string);
         } elseif (function_exists('mb_convert_encoding')) {
             return mb_convert_encoding($string, 'CP850', 'UTF-8');
         } else {
@@ -863,7 +863,7 @@ class Zip extends Archive
             1, // version
             crc32($original) // crc
         );
-        $extra.= $original;
+        $extra .= $original;
 
         return array($cp437, $extra);
     }

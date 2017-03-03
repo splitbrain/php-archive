@@ -162,6 +162,7 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $zip = new Zip();
         $zip->create($archive);
         $zip->addData('tüst.txt', 'test');
+        $zip->addData('snowy☃.txt', 'test');
         $zip->close();
         $this->assertFileExists($archive);
 
@@ -170,6 +171,7 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $zip->extract($extract);
 
         $this->assertFileExists($extract.'/tüst.txt');
+        $this->assertFileExists($extract.'/snowy☃.txt');
 
         $this->nativeCheck($archive);
         $this->native7ZipCheck($archive);
