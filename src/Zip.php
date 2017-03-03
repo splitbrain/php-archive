@@ -272,7 +272,7 @@ class Zip extends Archive
      * Add a file to the current archive using an existing file in the filesystem
      *
      * @param string          $file     path to the original file
-     * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
+     * @param string|FileInfo $fileinfo either the name to use in archive (string) or a FileInfo oject with all meta data, empty to take from original
      * @throws ArchiveIOException
      */
     public function addFile($file, $fileinfo = '')
@@ -610,13 +610,13 @@ class Zip extends Archive
         if(isset($header['extradata']['utf8path'])) {
             $fileinfo->setPath($header['extradata']['utf8path']);
         } else {
-            $fileinfo->setPath($this->cp2utf8($header['filename']));
+            $fileinfo->setPath($this->cpToUtf8($header['filename']));
         }
 
         if(isset($header['extradata']['utf8comment'])) {
             $fileinfo->setComment($header['extradata']['utf8comment']);
         } else {
-            $fileinfo->setComment($this->cp2utf8($header['comment']));
+            $fileinfo->setComment($this->cpToUtf8($header['comment']));
         }
 
         return $fileinfo;
@@ -632,7 +632,7 @@ class Zip extends Archive
      * @param $string
      * @return string
      */
-    protected function cp2utf8($string)
+    protected function cpToUtf8($string)
     {
         if (function_exists('iconv')) {
             return iconv('CP437', 'UTF-8', $string);
@@ -642,6 +642,26 @@ class Zip extends Archive
             return $string;
         }
     }
+
+    /**
+     * Convert the given UTF-8 encoded string to CP437
+     *
+     * Same caveats as for cpToUtf8() apply
+     *
+     * @param $string
+     * @return string
+     */
+    protected function utf8ToCp($string)
+    {
+        if (function_exists('iconv')) {
+            return iconv('UTF-8', 'CP437', $string);
+        } elseif (function_exists('mb_convert_encoding')) {
+            return mb_convert_encoding($string, 'CP850', 'UTF-8');
+        } else {
+            return $string;
+        }
+    }
+
 
     /**
      * Write to the open filepointer or memory
@@ -750,6 +770,8 @@ class Zip extends Archive
         $comp = $comp ? 8 : 0;
         $dtime = dechex($this->makeDosTime($ts));
 
+        list($name, $extra) = $this->encodeFilename($name);
+
         $header = "\x50\x4b\x01\x02"; // central file header signature
         $header .= pack('v', 14); // version made by - VFAT
         $header .= pack('v', 20); // version needed to extract - 2.0
@@ -766,13 +788,14 @@ class Zip extends Archive
         $header .= pack('V', $clen); // compressed size
         $header .= pack('V', $len); // uncompressed size
         $header .= pack('v', strlen($name)); // file name length
-        $header .= pack('v', 0); // extra field length
+        $header .= pack('v', strlen($extra)); // extra field length
         $header .= pack('v', 0); // file comment length
         $header .= pack('v', 0); // disk number start
         $header .= pack('v', 0); // internal file attributes
         $header .= pack('V', 0); // external file attributes  @todo was 0x32!?
         $header .= pack('V', $offset); // relative offset of local header
         $header .= $name; // file name
+        $header .= $extra; // extra (utf-8 filename)
 
         return $header;
     }
@@ -794,6 +817,8 @@ class Zip extends Archive
         $comp = $comp ? 8 : 0;
         $dtime = dechex($this->makeDosTime($ts));
 
+        list($name, $extra) = $this->encodeFilename($name);
+
         $header = "\x50\x4b\x03\x04"; //  local file header signature
         $header .= pack('v', 20); // version needed to extract - 2.0
         $header .= pack('v', 0); // general purpose flag - no flags set
@@ -809,8 +834,37 @@ class Zip extends Archive
         $header .= pack('V', $clen); // compressed size
         $header .= pack('V', $len); // uncompressed size
         $header .= pack('v', strlen($name)); // file name length
-        $header .= pack('v', 0); // extra field length
-        $header .= $name;
+        $header .= pack('v', strlen($extra)); // extra field length
+        $header .= $name; // file name
+        $header .= $extra; // extra (utf-8 filename)
         return $header;
+    }
+
+    /**
+     * Returns an allowed filename and an extra field header
+     *
+     * When encoding stuff outside the 7bit ASCII range it needs to be placed in a separate
+     * extra field
+     *
+     * @param $original
+     * @return array($filename, $extra)
+     */
+    protected function encodeFilename($original)
+    {
+        $cp437 = $this->utf8ToCp($original);
+        if ($cp437 === $original) {
+            return array($original, '');
+        }
+
+        $extra = pack(
+            'vvCV',
+            0x7075, // tag
+            strlen($original) + 5, // length of file + version + crc
+            1, // version
+            crc32($original) // crc
+        );
+        $extra.= $original;
+
+        return array($cp437, $extra);
     }
 }

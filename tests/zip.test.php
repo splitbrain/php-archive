@@ -69,9 +69,9 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
 
         $zip->create($tmp);
         $zip->setCompression(0);
-        $zip->AddFile("$dir/testdata1.txt", "$dir/testdata1.txt", 0);
-        $zip->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt', 0);
-        $zip->addData('another/testdata3.txt', 'testcontent3', 0, 0);
+        $zip->addFile("$dir/testdata1.txt", "$dir/testdata1.txt");
+        $zip->addFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
+        $zip->addData('another/testdata3.txt', 'testcontent3');
         $zip->close();
 
         $this->assertTrue(filesize($tmp) > 30); //arbitrary non-zero number
@@ -93,6 +93,9 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertTrue(strpos($data, "foobar.txt") === false, 'File not in ZIP');
 
         $this->assertTrue(strpos($data, "foobar") === false, 'Path not in ZIP');
+
+        $this->nativeCheck($tmp);
+        $this->native7ZipCheck($tmp);
 
         @unlink($tmp);
     }
@@ -151,6 +154,30 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         self::rdelete($extract);
         unlink($archive);
     }
+
+    public function test_utf8() {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->addData('tüst.txt', 'test');
+        $zip->close();
+        $this->assertFileExists($archive);
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($extract);
+
+        $this->assertFileExists($extract.'/tüst.txt');
+
+        $this->nativeCheck($archive);
+        $this->native7ZipCheck($archive);
+
+        self::rdelete($extract);
+        unlink($archive);
+    }
+
 
     /**
      * Test the given archive with a native zip installation (if available)
