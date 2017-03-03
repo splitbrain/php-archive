@@ -653,9 +653,16 @@ class Zip extends Archive
      */
     protected function utf8ToCp($string)
     {
+        // try iconv first
         if (function_exists('iconv')) {
-            return iconv('UTF-8', 'CP437//IGNORE', $string);
-        } elseif (function_exists('mb_convert_encoding')) {
+            $string = @iconv('UTF-8', 'CP437//IGNORE', $string);
+        }
+        if($string) return $string; // it worked
+
+        // still here? iconv failed to convert the string. Try another method
+        // see http://php.net/manual/en/function.iconv.php#108643
+
+        if (function_exists('mb_convert_encoding')) {
             return mb_convert_encoding($string, 'CP850', 'UTF-8');
         } else {
             return $string;
