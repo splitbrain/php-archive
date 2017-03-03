@@ -83,4 +83,17 @@ class FileInfoTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($fileinfo->match('/bang/', '/foo/'));
         $this->assertTrue($fileinfo->match('/bang/', '/bark/'));
     }
+
+    public function testFromPath()
+    {
+        $fileinfo = FileInfo::fromPath(__DIR__ . '/zip/block.txt', 'test.txt');
+        $this->assertEquals('test.txt', $fileinfo->getPath());
+        $this->assertFalse($fileinfo->getIsdir());
+        $this->assertSame(512, $fileinfo->getSize());
+
+        $fileinfo = FileInfo::fromPath(__DIR__ . '/zip', 'zip');
+        $this->assertEquals('zip', $fileinfo->getPath());
+        $this->assertTrue($fileinfo->getIsdir());
+        $this->assertSame(0, $fileinfo->getSize());
+    }
 }
