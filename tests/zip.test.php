@@ -145,9 +145,55 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists("$extract/Zip.php");
         $this->assertFileNotExists("$extract/FileInfo.php");
 
+        $this->nativeCheck($archive);
+        $this->native7ZipCheck($archive);
+
         self::rdelete($extract);
         unlink($archive);
+    }
 
+    /**
+     * Test the given archive with a native zip installation (if available)
+     *
+     * @param $archive
+     */
+    protected function nativeCheck($archive)
+    {
+        if (!is_executable('/usr/bin/zipinfo')) {
+            return;
+        }
+        $archive = escapeshellarg($archive);
+
+        $return = 0;
+        $output = array();
+        $ok = exec("/usr/bin/zipinfo $archive 2>&1 >/dev/null", $output, $return);
+        $output = join("\n", $output);
+
+        $this->assertNotFalse($ok, "native zip execution for $archive failed:\n$output");
+        $this->assertSame(0, $return, "native zip execution for $archive had non-zero exit code $return:\n$output");
+        $this->assertSame('', $output, "native zip execution for $archive had non-empty output:\n$output");
+    }
+
+    /**
+     * Test the given archive with a native 7zip installation (if available)
+     *
+     * @param $archive
+     */
+    protected function native7ZipCheck($archive)
+    {
+        if (!is_executable('/usr/bin/7z')) {
+            return;
+        }
+        $archive = escapeshellarg($archive);
+
+        $return = 0;
+        $output = array();
+        $ok = exec("/usr/bin/7z t $archive 2>&1 >/dev/null", $output, $return);
+        $output = join("\n", $output);
+
+        $this->assertNotFalse($ok, "native 7zip execution for $archive failed:\n$output");
+        $this->assertSame(0, $return, "native 7zip execution for $archive had non-zero exit code $return:\n$output");
+        $this->assertSame('', $output, "native 7zip execution for $archive had non-empty output:\n$output");
     }
 
     /**

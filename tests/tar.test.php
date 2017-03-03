@@ -61,7 +61,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     {
         $tar = new Tar();
 
-        $dir  = dirname(__FILE__).'/tar';
+        $dir = dirname(__FILE__) . '/tar';
         $tdir = ltrim($dir, '/');
 
         $tar->create();
@@ -99,9 +99,9 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     {
         $tar = new Tar();
 
-        $dir  = dirname(__FILE__).'/tar';
+        $dir = dirname(__FILE__) . '/tar';
         $tdir = ltrim($dir, '/');
-        $tmp  = tempnam(sys_get_temp_dir(), 'dwtartest');
+        $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
 
         $tar->create($tmp);
         $tar->AddFile("$dir/testdata1.txt");
@@ -137,10 +137,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_tarcontent()
     {
-        $dir = dirname(__FILE__).'/tar';
+        $dir = dirname(__FILE__) . '/tar';
 
         foreach ($this->extensions as $ext) {
-            $tar  = new Tar();
+            $tar = new Tar();
             $file = "$dir/test.$ext";
 
             $tar->open($file);
@@ -167,7 +167,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             $tar = new Tar();
             $tar->create($archive);
-            foreach($input as $path) {
+            foreach ($input as $path) {
                 $file = basename($path);
                 $tar->addFile($path, $file);
             }
@@ -182,9 +182,43 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->assertFileExists("$extract/Zip.php");
             $this->assertFileNotExists("$extract/FileInfo.php");
 
+            $this->nativeCheck($archive, $ext);
+
             self::rdelete($extract);
             unlink($archive);
         }
+    }
+
+    /**
+     * Test the given archive with a native tar installation (if available)
+     *
+     * @param $archive
+     * @param $ext
+     */
+    protected function nativeCheck($archive, $ext)
+    {
+        if (!is_executable('/usr/bin/tar')) {
+            return;
+        }
+
+        $switch = array(
+            'tar' => '-tf',
+            'tgz' => '-tzf',
+            'tar.gz' => '-tzf',
+            'tbz' => '-tjf',
+            'tar.bz2' => '-tjf',
+        );
+        $arg = $switch[$ext];
+        $archive = escapeshellarg($archive);
+
+        $return = 0;
+        $output = array();
+        $ok = exec("/usr/bin/tar $arg $archive 2>&1 >/dev/null", $output, $return);
+        $output = join("\n", $output);
+
+        $this->assertNotFalse($ok, "native tar execution for $archive failed:\n$output");
+        $this->assertSame(0, $return, "native tar execution for $archive had non-zero exit code $return:\n$output");
+        $this->assertSame('', $output, "native tar execution for $archive had non-empty output:\n$output");
     }
 
     /**
@@ -192,11 +226,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_tarextract()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
-            $tar  = new Tar();
+            $tar = new Tar();
             $file = "$dir/test.$ext";
 
             $tar->open($file);
@@ -204,11 +238,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             clearstatcache();
 
-            $this->assertFileExists($out.'/tar/testdata1.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/tar/testdata1.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/tar/testdata1.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/tar/testdata1.txt'), "Extracted $file");
 
-            $this->assertFileExists($out.'/tar/foobar/testdata2.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/tar/foobar/testdata2.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/tar/foobar/testdata2.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/tar/foobar/testdata2.txt'), "Extracted $file");
 
             self::rdelete($out);
         }
@@ -219,11 +253,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_compstripextract()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
-            $tar  = new Tar();
+            $tar = new Tar();
             $file = "$dir/test.$ext";
 
             $tar->open($file);
@@ -231,11 +265,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             clearstatcache();
 
-            $this->assertFileExists($out.'/testdata1.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/testdata1.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/testdata1.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/testdata1.txt'), "Extracted $file");
 
-            $this->assertFileExists($out.'/foobar/testdata2.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/foobar/testdata2.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/foobar/testdata2.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/foobar/testdata2.txt'), "Extracted $file");
 
             self::rdelete($out);
         }
@@ -246,11 +280,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_prefixstripextract()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
-            $tar  = new Tar();
+            $tar = new Tar();
             $file = "$dir/test.$ext";
 
             $tar->open($file);
@@ -258,11 +292,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             clearstatcache();
 
-            $this->assertFileExists($out.'/tar/testdata1.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/tar/testdata1.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/tar/testdata1.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/tar/testdata1.txt'), "Extracted $file");
 
-            $this->assertFileExists($out.'/testdata2.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/testdata2.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/testdata2.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/testdata2.txt'), "Extracted $file");
 
             self::rdelete($out);
         }
@@ -273,11 +307,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_includeextract()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
-            $tar  = new Tar();
+            $tar = new Tar();
             $file = "$dir/test.$ext";
 
             $tar->open($file);
@@ -285,10 +319,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             clearstatcache();
 
-            $this->assertFileNotExists($out.'/tar/testdata1.txt', "Extracted $file");
+            $this->assertFileNotExists($out . '/tar/testdata1.txt', "Extracted $file");
 
-            $this->assertFileExists($out.'/tar/foobar/testdata2.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/tar/foobar/testdata2.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/tar/foobar/testdata2.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/tar/foobar/testdata2.txt'), "Extracted $file");
 
             self::rdelete($out);
         }
@@ -299,11 +333,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_excludeextract()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
-            $tar  = new Tar();
+            $tar = new Tar();
             $file = "$dir/test.$ext";
 
             $tar->open($file);
@@ -311,10 +345,10 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             clearstatcache();
 
-            $this->assertFileExists($out.'/tar/testdata1.txt', "Extracted $file");
-            $this->assertEquals(13, filesize($out.'/tar/testdata1.txt'), "Extracted $file");
+            $this->assertFileExists($out . '/tar/testdata1.txt', "Extracted $file");
+            $this->assertEquals(13, filesize($out . '/tar/testdata1.txt'), "Extracted $file");
 
-            $this->assertFileNotExists($out.'/tar/foobar/testdata2.txt', "Extracted $file");
+            $this->assertFileNotExists($out . '/tar/foobar/testdata2.txt', "Extracted $file");
 
             self::rdelete($out);
         }
@@ -336,7 +370,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype('foo.tar.BZ2'));
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype('foo.tar.bz2'));
 
-        $dir = dirname(__FILE__).'/tar';
+        $dir = dirname(__FILE__) . '/tar';
         $this->assertEquals(Tar::COMPRESS_NONE, $tar->filetype("$dir/test.tar"));
         $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.tgz"));
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype("$dir/test.tbz"));
@@ -350,8 +384,8 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_longpathextract()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach (array('ustar', 'gnu') as $format) {
             $tar = new Tar();
@@ -359,7 +393,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $tar->extract($out);
 
             $this->assertFileExists(
-                $out.'/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/test.txt'
+                $out . '/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/test.txt'
             );
 
             self::rdelete($out);
@@ -454,8 +488,8 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_tarbomb()
     {
-        $dir = dirname(__FILE__).'/tar';
-        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
+        $dir = dirname(__FILE__) . '/tar';
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         $tar = new Tar();
 
@@ -465,7 +499,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         clearstatcache();
 
         $this->assertFileExists(
-            $out.'/AAAAAAAAAAAAAAAAA/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.txt'
+            $out . '/AAAAAAAAAAAAAAAAA/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.txt'
         );
 
         self::rdelete($out);
@@ -476,7 +510,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_zerofile()
     {
-        $dir = dirname(__FILE__).'/tar';
+        $dir = dirname(__FILE__) . '/tar';
         $tar = new Tar();
         $tar->setCompression(0);
         $tar->create();
@@ -502,7 +536,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      */
     public function test_blockfile()
     {
-        $dir = dirname(__FILE__).'/tar';
+        $dir = dirname(__FILE__) . '/tar';
         $tar = new Tar();
         $tar->setCompression(0);
         $tar->create();
