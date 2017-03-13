@@ -570,15 +570,19 @@ class Tar extends Archive
             $return['filename'] = trim($header['prefix']).'/'.$return['filename'];
         }
 
-        // Handle Long-Link entries from GNU Tar
-        if ($return['typeflag'] == 'L') {
+       // Handle Long-Link and PAX entries from GNU Tar
+        if ($return['typeflag'] == 'L' || $return['typeflag'] == 'x') {
             // following data block(s) is the filename
-            $filename = trim($this->readbytes(ceil($return['size'] / 512) * 512));
+            $filename = trim($this->readbytes(ceil($header['size'] / 512) * 512));
             // next block is the real header
             $block  = $this->readbytes(512);
             $return = $this->parseHeader($block);
+
             // overwrite the filename
-            $return['filename'] = $filename;
+            if($return['typeflag'] == 'L')
+            {
+				$return['filename'] = $filename;
+			}
         }
 
         return $return;
