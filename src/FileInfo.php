@@ -55,18 +55,13 @@ class FileInfo
 
         $stat = stat($path);
         $file = new FileInfo();
-        
-        if(is_dir($path))
-		$size = 0;
-	else
-		$size = filesize($path);
-        
+
         $file->setPath($path);
         $file->setIsdir(is_dir($path));
         $file->setMode(fileperms($path));
         $file->setOwner(fileowner($path));
         $file->setGroup(filegroup($path));
-        $file->setSize($size);
+        $file->setSize(filesize($path));
         $file->setUid($stat['uid']);
         $file->setGid($stat['gid']);
         $file->setMtime($stat['mtime']);
@@ -79,10 +74,11 @@ class FileInfo
     }
 
     /**
-     * @return int
+     * @return int the filesize. always 0 for directories
      */
     public function getSize()
     {
+        if($this->isdir) return 0;
         return $this->size;
     }
 
