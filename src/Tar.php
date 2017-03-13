@@ -271,15 +271,14 @@ class Tar extends Archive
         //rewrite header with new size if file size changed while reading
         if($file_offset && $file_offset != $fileinfo->getSize())
         {
-			$archive_current_position = ftell($this->fh);
-			fseek($this->fh, $archive_header_position);
+		$archive_current_position = ftell($this->fh);
+		fseek($this->fh, $archive_header_position);
 			
-			$fileinfo->setSize(ftell($fp));
-			$this->writeFileHeader($fileinfo);
+		$fileinfo->setSize(ftell($fp));
+		$this->writeFileHeader($fileinfo);
 
-			fseek($this->fh, $archive_current_position);
-
-		}
+		fseek($this->fh, $archive_current_position);
+	}
 
         fclose($fp);
     }
