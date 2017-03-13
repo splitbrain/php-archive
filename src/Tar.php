@@ -248,15 +248,10 @@ class Tar extends Archive
         if (!$fp) {
             throw new ArchiveIOException('Could not open file for reading: '.$file);
         }
-		
-        //create file header
-        if(is_resource($this->fh))
-        {
-			$archive_header_position = ftell($this->fh);
-		}
-		
+
+        // create file header
         $this->writeFileHeader($fileinfo);
-			
+
         // write data
         while (!feof($fp)) {
             $data = fread($fp, 512);
@@ -269,21 +264,6 @@ class Tar extends Archive
             $packed = pack("a512", $data);
             $this->writebytes($packed);
         }
-        
-        $file_offset = ftell($fp);
-        
-        //rewrite header with new size if file size changed while reading
-        if(is_resource($this->fh) && $file_offset && $file_offset != $fileinfo->getSize())
-        {
-		$archive_current_position = ftell($this->fh);
-		fseek($this->fh, $archive_header_position);
-			
-		$fileinfo->setSize(ftell($fp));
-		$this->writeFileHeader($fileinfo);
-
-		fseek($this->fh, $archive_current_position);
-	}
-
         fclose($fp);
     }
 
@@ -593,7 +573,7 @@ class Tar extends Archive
         // Handle Long-Link entries from GNU Tar
         if ($return['typeflag'] == 'L') {
             // following data block(s) is the filename
-            $filename = trim($this->readbytes(ceil($header['size'] / 512) * 512));
+            $filename = trim($this->readbytes(ceil($return['size'] / 512) * 512));
             // next block is the real header
             $block  = $this->readbytes(512);
             $return = $this->parseHeader($block);
