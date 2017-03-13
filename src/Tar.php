@@ -573,7 +573,7 @@ class Tar extends Archive
         // Handle Long-Link entries from GNU Tar
         if ($return['typeflag'] == 'L') {
             // following data block(s) is the filename
-            $filename = trim($this->readbytes(ceil($return['size'] / 512) * 512));
+            $filename = trim($this->readbytes(ceil($header['size'] / 512) * 512));
             // next block is the real header
             $block  = $this->readbytes(512);
             $return = $this->parseHeader($block);
@@ -582,7 +582,7 @@ class Tar extends Archive
 			$return['filename'] = $filename;
         }elseif ($return['typeflag'] == 'x') {
             // following data block(s) is the filename
-            $filename = trim($this->readbytes(ceil($return['size'] / 512) * 512));
+            $filename = trim($this->readbytes(ceil($header['size'] / 512) * 512));
             // next block is the real header
             $block  = $this->readbytes(512);
             $return = $this->parseHeader($block);
