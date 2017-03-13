@@ -250,7 +250,11 @@ class Tar extends Archive
         }
 		
         // create file header
-        $archive_header_position = ftell($this->fh);
+        if(is_resource($this->fh))
+        {
+			$archive_header_position = ftell($this->fh);
+		}
+		
         $this->writeFileHeader($fileinfo);
 			
         // write data
@@ -269,7 +273,7 @@ class Tar extends Archive
         $file_offset = ftell($fp);
         
         //rewrite header with new size if file size changed while reading
-        if($file_offset && $file_offset != $fileinfo->getSize())
+        if(is_resource($this->fh) && $file_offset && $file_offset != $fileinfo->getSize())
         {
 		$archive_current_position = ftell($this->fh);
 		fseek($this->fh, $archive_header_position);
