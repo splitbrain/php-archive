@@ -251,7 +251,7 @@ class Tar extends Archive
 
         // create file header
         $this->writeFileHeader($fileinfo);
-
+		
         // write data
         while (!feof($fp)) {
             $data = fread($fp, 512);
