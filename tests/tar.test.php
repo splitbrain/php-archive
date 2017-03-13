@@ -203,9 +203,12 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $list = $tar->extract($out);
             
             clearstatcache();
-			
-            $this->assertFileExists($out.'/4слайд-380x253.jpg', "Extracted $file");
-            $this->assertEquals(15251, filesize($out.'/4слайд-380x253.jpg'), "Extracted $file");
+
+            $this->assertFileExists($out.'/4слайд-1.jpg', "Extracted $file");
+            $this->assertEquals(15251, filesize($out.'/4слайд-1.jpg'), "Extracted $file");
+
+            $this->assertFileExists($out.'/4слайд-2.jpg', "Extracted $file");
+            $this->assertEquals(16671, filesize($out.'/4слайд-2.jpg'), "Extracted $file");
             
             $this->assertFileExists($out.'/4слайд.jpg', "Extracted $file");
             $this->assertEquals(214949, filesize($out.'/4слайд.jpg'), "Extracted $file");
