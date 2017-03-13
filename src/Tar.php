@@ -249,7 +249,7 @@ class Tar extends Archive
             throw new ArchiveIOException('Could not open file for reading: '.$file);
         }
 		
-        // create file header
+        //create file header
         if(is_resource($this->fh))
         {
 			$archive_header_position = ftell($this->fh);
