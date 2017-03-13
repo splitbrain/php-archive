@@ -186,7 +186,35 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             unlink($archive);
         }
     }
+	
+	/**
+     * Extract the prebuilt tar files with PAX headers
+     */
+    public function test_tarpaxextract()
+    {
+        $dir = dirname(__FILE__).'/tar';
+        $out = sys_get_temp_dir().'/dwtartest'.md5(time());
 
+        foreach ($this->extensions as $ext) {
+            $tar  = new Tar();
+            $file = "$dir/pax_test.$ext";
+
+            $tar->open($file);
+            $list = $tar->extract($out);
+            
+            clearstatcache();
+			
+            $this->assertFileExists($out.'/4слайд-380x253.jpg', "Extracted $file");
+            $this->assertEquals(15251, filesize($out.'/4слайд-380x253.jpg'), "Extracted $file");
+            
+            $this->assertFileExists($out.'/4слайд.jpg', "Extracted $file");
+            $this->assertEquals(214949, filesize($out.'/4слайд.jpg'), "Extracted $file");
+			
+			
+            self::rdelete($out);
+        }
+    }
+	
     /**
      * Extract the prebuilt tar files
      */
