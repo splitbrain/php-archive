@@ -249,10 +249,15 @@ class Tar extends Archive
         if (!$fp) {
             throw new ArchiveIOException('Could not open file for reading: '.$file);
         }
-
-        // create file header
+		
+        //create file header
+        if(is_resource($this->fh))
+        {
+			$archive_header_position = ftell($this->fh);
+		}
+		
         $this->writeFileHeader($fileinfo);
-
+			
         // write data
         $read = 0;
         while (!feof($fp)) {
@@ -267,6 +272,21 @@ class Tar extends Archive
             $packed = pack("a512", $data);
             $this->writebytes($packed);
         }
+        
+        $file_offset = ftell($fp);
+        
+        //rewrite header with new size if file size changed while reading
+        if(is_resource($this->fh) && $file_offset && $file_offset != $fileinfo->getSize())
+        {
+		$archive_current_position = ftell($this->fh);
+		fseek($this->fh, $archive_header_position);
+			
+		$fileinfo->setSize(ftell($fp));
+		$this->writeFileHeader($fileinfo);
+
+		fseek($this->fh, $archive_current_position);
+	}
+
         fclose($fp);
 
         if($read != $fileinfo->getSize()) {
