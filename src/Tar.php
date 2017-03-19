@@ -230,9 +230,10 @@ class Tar extends Archive
     /**
      * Add a file to the current TAR archive using an existing file in the filesystem
      *
-     * @param string          $file     path to the original file
+     * @param string $file path to the original file
      * @param string|FileInfo $fileinfo either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original
-     * @throws ArchiveIOException
+     * @throws ArchiveCorruptedException when the file changes while reading it, the archive will be corrupt and should be deleted
+     * @throws ArchiveIOException there was trouble reading the given file, it was not added
      */
     public function addFile($file, $fileinfo = '')
     {
@@ -253,8 +254,10 @@ class Tar extends Archive
         $this->writeFileHeader($fileinfo);
 
         // write data
+        $read = 0;
         while (!feof($fp)) {
             $data = fread($fp, 512);
+            $read += strlen($data);
             if ($data === false) {
                 break;
             }
@@ -265,6 +268,11 @@ class Tar extends Archive
             $this->writebytes($packed);
         }
         fclose($fp);
+
+        if($read != $fileinfo->getSize()) {
+            $this->close();
+            throw new ArchiveCorruptedException("The size of $file changed while reading, archive corrupted. read $read expected ".$fileinfo->getSize());
+        }
     }
 
     /**
