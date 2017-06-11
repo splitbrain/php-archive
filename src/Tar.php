@@ -585,8 +585,15 @@ class Tar extends Archive
             // next block is the real header
             $block  = $this->readbytes(512);
             $return = $this->parseHeader($block);
+
             // overwrite the filename
             $return['filename'] = $filename;
+        }elseif ($return['typeflag'] == 'x') {
+            // following data block(s) is the filename
+            $filename = trim($this->readbytes(ceil($return['size'] / 512) * 512));
+            // next block is the real header
+            $block  = $this->readbytes(512);
+            $return = $this->parseHeader($block);
         }
 
         return $return;
