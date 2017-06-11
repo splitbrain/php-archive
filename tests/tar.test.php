@@ -556,6 +556,41 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(512 * 4, strlen($file)); // 1 header block + data block + 2 footer blocks
     }
+    
+    /**
+     * @depends test_ext_zlib
+     */
+    public function test_gzipisvalid()
+    {
+        foreach (['tgz', 'tar.gz'] as $ext) {
+            $input = glob(dirname(__FILE__) . '/../src/*');
+            $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
+            $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
+
+            $tar = new Tar();
+            $tar->setCompression(9, Tar::COMPRESS_GZIP);
+            $tar->create();
+            foreach ($input as $path) {
+                $file = basename($path);
+                $tar->addFile($path, $file);
+            }
+            $tar->save($archive);
+            $this->assertFileExists($archive);
+            
+            try {
+                $phar = new PharData($archive);
+                $phar->extractTo($extract);
+            } catch (\Exception $e) {};
+
+            $this->assertFileExists("$extract/Tar.php");
+            $this->assertFileExists("$extract/Zip.php");
+
+            $this->nativeCheck($archive, $ext);
+
+            self::rdelete($extract);
+            unlink($archive);
+        }
+    }
 
     /**
      * recursive rmdir()/unlink()
