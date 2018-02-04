@@ -557,7 +557,7 @@ class TarTestCase extends TestCase
      */
     public function testGzipIsValid()
     {
-        foreach (['tgz', 'tar.gz'] as $ext) {
+        foreach (array('tgz', 'tar.gz') as $ext) {
             $input = glob(dirname(__FILE__) . '/../src/*');
             $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
             $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
