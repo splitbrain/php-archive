@@ -698,7 +698,7 @@ class TarTestCase extends TestCase
         $tar->addFile("$dir/zero.txt", 'zero.txt');
         $file = $tar->getArchive();
 
-        $this->assertEquals(104, strlen($file)); // 1 header block + 2 footer blocks
+        $this->assertEquals(102, strlen($file)); // 1 header block + 2 footer blocks
     }
 
     public function testSaveWithCompressionAuto()
