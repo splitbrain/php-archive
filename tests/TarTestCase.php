@@ -697,6 +697,7 @@ class TarTestCase extends TestCase
         $file = $tar->getArchive();
         $output = vfsStream::url('home_root_path/saved.tar.bz2');
         file_put_contents($output, $file);
+        clearstatcache();
 
         $this->assertEquals(104, filesize($output)); // 1 header block + 2 footer blocks
     }
