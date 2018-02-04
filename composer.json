@@ -20,12 +20,21 @@
     },
 
     "require-dev": {
-        "phpunit/phpunit": "4.5.*"
+        "phpunit/phpunit": "^4.8",
+        "mikey179/vfsStream": "^1.6",
+        "ext-zip": "*",
+        "ext-bz2": "*"
     },
 
     "autoload": {
         "psr-4": {
             "splitbrain\\PHPArchive\\": "src"
+        }
+    },
+
+    "autoload-dev": {
+        "psr-4": {
+            "splitbrain\\PHPArchive\\": "tests"
         }
     }
 }

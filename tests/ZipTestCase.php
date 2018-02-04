@@ -1,14 +1,30 @@
 <?php
 
-use splitbrain\PHPArchive\Zip;
+namespace splitbrain\PHPArchive;
 
-class Zip_TestCase extends PHPUnit_Framework_TestCase
+use splitbrain\PHPArchive\Zip;
+use PHPUnit\Framework\TestCase;
+use org\bovigo\vfs\vfsStream;
+
+class ZipTestCase extends TestCase
 {
+    protected function setUp()
+    {
+        vfsStream::setup('home_root_path');
+    }
+
+    /*
+     * dependency for tests needing zip extension to pass
+     */
+    public function testExtZipIsInstalled()
+    {
+        $this->assertTrue(function_exists('zip_open'));
+    }
 
     /**
      * @expectedException splitbrain\PHPArchive\ArchiveIOException
      */
-    public function test_missing()
+    public function testMissing()
     {
         $tar = new Zip();
         $tar->open('nope.zip');
@@ -19,8 +35,9 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
      * the uncompressed zip stream
      *
      * No check for format correctness
+     * @depends testExtZipIsInstalled
      */
-    public function test_createdynamic()
+    public function testCreateDynamic()
     {
         $zip = new Zip();
 
@@ -58,14 +75,15 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
      * uncompressed zip file
      *
      * No check for format correctness
+     * @depends testExtZipIsInstalled
      */
-    public function test_createfile()
+    public function testCreateFile()
     {
         $zip = new Zip();
 
         $dir  = dirname(__FILE__).'/zip';
         $tdir = ltrim($dir, '/');
-        $tmp  = tempnam(sys_get_temp_dir(), 'dwziptest');
+        $tmp  = vfsStream::url('home_root_path/test.zip');
 
         $zip->create($tmp);
         $zip->setCompression(0);
@@ -93,17 +111,56 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertTrue(strpos($data, "foobar.txt") === false, 'File not in ZIP');
 
         $this->assertTrue(strpos($data, "foobar") === false, 'Path not in ZIP');
+    }
 
-        $this->nativeCheck($tmp);
-        $this->native7ZipCheck($tmp);
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testCreateWithInvalidFilePath()
+    {
+        $zip = new Zip();
 
-        @unlink($tmp);
+        $dir  = dirname(__FILE__).'/zip';
+        $tmp  = vfsStream::url('invalid_root_path/test.zip');
+
+        $zip->create($tmp);
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testAddFileWithArchiveStreamIsClosed()
+    {
+        $zip = new Zip();
+
+        $dir  = dirname(__FILE__).'/zip';
+        $tmp  = vfsStream::url('home_root_path/test.zip');
+
+        $zip->setCompression(0);
+        $zip->close();
+        $zip->addFile("$dir/testdata1.txt", "$dir/testdata1.txt");
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testAddFileWithInvalidFile()
+    {
+        $zip = new Zip();
+
+        $tmp  = vfsStream::url('home_root_path/test.zip');
+
+        $zip->create($tmp);
+        $zip->setCompression(0);
+        $zip->addFile('invalid_file', false);
+        $zip->close();
     }
 
     /**
      * List the contents of the prebuilt ZIP file
+     * @depends testExtZipIsInstalled
      */
-    public function test_zipcontent()
+    public function testZipContent()
     {
         $dir = dirname(__FILE__).'/zip';
 
@@ -122,11 +179,26 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Create an archive and unpack it again
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
      */
-    public function test_dogfood()
+    public function testZipContentWithArchiveStreamIsClosed()
     {
+        $dir = dirname(__FILE__).'/zip';
 
+        $zip  = new Zip();
+        $file = "$dir/test.zip";
+
+        $zip->open($file);
+        $zip->close();
+        $content = $zip->contents();
+    }
+
+    /**
+     * Create an archive and unpack it again
+     * @depends testExtZipIsInstalled
+     */
+    public function testDogFood()
+    {
         $input = glob(dirname(__FILE__) . '/../src/*');
         $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
         $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
@@ -151,11 +223,15 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->nativeCheck($archive);
         $this->native7ZipCheck($archive);
 
-        self::rdelete($extract);
+        self::RDelete($extract);
         unlink($archive);
     }
 
-    public function test_utf8() {
+    /**
+     * @depends testExtZipIsInstalled
+     */
+    public function testUtf8()
+    {
         $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
         $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
 
@@ -176,10 +252,56 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->nativeCheck($archive);
         $this->native7ZipCheck($archive);
 
-        self::rdelete($extract);
+        self::RDelete($extract);
         unlink($archive);
     }
 
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testAddDataWithArchiveStreamIsClosed()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->close();
+        $zip->addData('tüst.txt', 'test');
+    }
+
+    public function testCloseWithArchiveStreamIsClosed()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->close();
+
+        $this->assertNull($zip->close());
+    }
+
+    public function testSaveArchiveFile()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $zip = new zip();
+        $zip->setCompression(-1);
+        $zip->create();
+        $zip->addFile("$dir/zero.txt", 'zero.txt');
+
+        $this->assertNull($zip->save(vfsStream::url('home_root_path/archive_file')));
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testSaveWithInvalidFilePath()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->save(vfsStream::url('invalid_root_path/save.zip'));
+    }
 
     /**
      * Test the given archive with a native zip installation (if available)
@@ -227,8 +349,9 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
 
     /**
      * Extract the prebuilt zip files
+     * @depends testExtZipIsInstalled
      */
-    public function test_zipextract()
+    public function testZipExtract()
     {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
@@ -251,13 +374,30 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertEquals(1836, filesize($out.'/zip/compressable.txt'), "Extracted $file");
         $this->assertFileNotExists($out.'/zip/compressable.txt.gz', "Extracted $file");
 
-        self::rdelete($out);
+        self::RDelete($out);
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testZipExtractWithArchiveStreamIsClosed()
+    {
+        $dir = dirname(__FILE__).'/zip';
+        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
+
+        $zip  = new Zip();
+        $file = "$dir/test.zip";
+
+        $zip->open($file);
+        $zip->close();
+        $zip->extract($out);
     }
 
     /**
      * Extract the prebuilt zip files with component stripping
+     * @depends testExtZipIsInstalled
      */
-    public function test_compstripextract()
+    public function testCompStripExtract()
     {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
@@ -276,13 +416,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists($out.'/foobar/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/foobar/testdata2.txt'), "Extracted $file");
 
-        self::rdelete($out);
+        self::RDelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with prefix stripping
+     * @depends testExtZipIsInstalled
      */
-    public function test_prefixstripextract()
+    public function testPrefixStripExtract()
     {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
@@ -301,13 +442,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists($out.'/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/testdata2.txt'), "Extracted $file");
 
-        self::rdelete($out);
+        self::RDelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with include regex
+     * @depends testExtZipIsInstalled
      */
-    public function test_includeextract()
+    public function testIncludeExtract()
     {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
@@ -325,13 +467,14 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists($out.'/zip/foobar/testdata2.txt', "Extracted $file");
         $this->assertEquals(13, filesize($out.'/zip/foobar/testdata2.txt'), "Extracted $file");
 
-        self::rdelete($out);
+        self::RDelete($out);
     }
 
     /**
      * Extract the prebuilt zip files with exclude regex
+     * @depends testExtZipIsInstalled
      */
-    public function test_excludeextract()
+    public function testExcludeExtract()
     {
         $dir = dirname(__FILE__).'/zip';
         $out = sys_get_temp_dir().'/dwziptest'.md5(time());
@@ -349,12 +492,15 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
 
         $this->assertFileNotExists($out.'/zip/foobar/testdata2.txt', "Extracted $file");
 
-        self::rdelete($out);
+        self::RDelete($out);
     }
 
-    public function test_umlautWinrar()
+    /**
+     * @depends testExtZipIsInstalled
+     */
+    public function testUmlautWinrar()
     {
-        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
 
         $zip = new Zip();
         $zip->open(__DIR__ . '/zip/issue14-winrar.zip');
@@ -362,9 +508,12 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists("$out/tüst.txt");
     }
 
-    public function test_umlautWindows()
+    /**
+     * @depends testExtZipIsInstalled
+     */
+    public function testUmlautWindows()
     {
-        $out = sys_get_temp_dir().'/dwziptest'.md5(time());
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
 
         $zip = new Zip();
         $zip->open(__DIR__ . '/zip/issue14-windows.zip');
@@ -379,7 +528,7 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
      * @static
      * @param $target string
      */
-    public static function rdelete($target)
+    public static function RDelete($target)
     {
         if (!is_dir($target)) {
             unlink($target);
@@ -389,7 +538,7 @@ class Zip_TestCase extends PHPUnit_Framework_TestCase
                 if ($entry == '.' || $entry == '..') {
                     continue;
                 }
-                self::rdelete("$target/$entry");
+                self::RDelete("$target/$entry");
             }
             $dh->close();
             rmdir($target);

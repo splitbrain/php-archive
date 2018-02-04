@@ -111,7 +111,7 @@ class Zip extends Archive
      * @throws ArchiveIOException
      * @return FileInfo[]
      */
-    function extract($outdir, $strip = '', $exclude = '', $include = '')
+    public function extract($outdir, $strip = '', $exclude = '', $include = '')
     {
         if ($this->closed || !$this->file) {
             throw new ArchiveIOException('Can not read from a closed archive');
@@ -163,7 +163,7 @@ class Zip extends Archive
             }
 
             // open file for writing
-            $fp = fopen($extractto, "wb");
+            $fp = @fopen($extractto, "wb");
             if (!$fp) {
                 throw new ArchiveIOException('Could not open file for writing: '.$extractto);
             }
@@ -419,7 +419,7 @@ class Zip extends Archive
      */
     public function save($file)
     {
-        if (!file_put_contents($file, $this->getArchive())) {
+        if (!@file_put_contents($file, $this->getArchive())) {
             throw new ArchiveIOException('Could not write to file: '.$file);
         }
     }
