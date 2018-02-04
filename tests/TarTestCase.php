@@ -557,7 +557,7 @@ class TarTestCase extends TestCase
      */
     public function testGzipIsValid()
     {
-        foreach (array('tgz', 'tar.gz') as $ext) {
+        foreach (['tgz', 'tar.gz'] as $ext) {
             $input = glob(dirname(__FILE__) . '/../src/*');
             $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
             $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
@@ -696,7 +696,7 @@ class TarTestCase extends TestCase
         $tar->addFile("$dir/zero.txt", 'zero.txt');
         $file = $tar->getArchive();
 
-        $this->assertGreaterThanOrEqual(102, strlen($file)); // 1 header block + 2 footer blocks
+        $this->assertEquals(104, strlen(bin2hex($file))/2); // 1 header block + 2 footer blocks
     }
 
     public function testSaveWithCompressionAuto()
