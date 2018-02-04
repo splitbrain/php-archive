@@ -695,8 +695,10 @@ class TarTestCase extends TestCase
         $tar->create();
         $tar->addFile("$dir/zero.txt", 'zero.txt');
         $file = $tar->getArchive();
+        $output = vfsStream::url('home_root_path/saved.tar.bz2');
+        file_put_contents($output, $file);
 
-        $this->assertInternalType('string', $file); // 1 header block + 2 footer blocks
+        $this->assertEquals(104, filesize($output)); // 1 header block + 2 footer blocks
     }
 
     public function testSaveWithCompressionAuto()
