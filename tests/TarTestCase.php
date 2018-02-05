@@ -1,15 +1,19 @@
 <?php
 
-use splitbrain\PHPArchive\Tar;
+namespace splitbrain\PHPArchive;
 
-class Tar_TestCase extends PHPUnit_Framework_TestCase
+use splitbrain\PHPArchive\Tar;
+use PHPUnit\Framework\TestCase;
+use org\bovigo\vfs\vfsStream;
+
+class TarTestCase extends TestCase
 {
     /**
      * file extensions that several tests use
      */
     protected $extensions = array('tar');
 
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
         if (extension_loaded('zlib')) {
@@ -20,35 +24,38 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->extensions[] = 'tbz';
             $this->extensions[] = 'tar.bz2';
         }
+        vfsStream::setup('home_root_path');
+    }
+
+    protected function tearDown()
+    {
+        parent::tearDown();
+        $this->extensions[] = null;
     }
 
     /*
      * dependency for tests needing zlib extension to pass
      */
-    public function test_ext_zlib()
+    public function testExtZlibIsInstalled()
     {
-        if (!extension_loaded('zlib')) {
-            $this->markTestSkipped('skipping all zlib tests.  Need zlib extension');
-        }
+        $this->assertTrue(function_exists('gzopen'));
     }
 
     /*
-     * dependency for tests needing zlib extension to pass
+     * dependency for tests needing bz2 extension to pass
      */
-    public function test_ext_bz2()
+    public function testExtBz2IsInstalled()
     {
-        if (!extension_loaded('bz2')) {
-            $this->markTestSkipped('skipping all bzip2 tests.  Need bz2 extension');
-        }
+        $this->assertTrue(function_exists('bzopen'));
     }
 
     /**
      * @expectedException splitbrain\PHPArchive\ArchiveIOException
      */
-    public function test_missing()
+    public function testTarFileIsNotExisted()
     {
         $tar = new Tar();
-        $tar->open('nope.tar');
+        $tar->open('non_existed_file.tar');
     }
 
     /**
@@ -57,7 +64,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      *
      * No check for format correctness
      */
-    public function test_createdynamic()
+    public function testCreateDynamic()
     {
         $tar = new Tar();
 
@@ -65,8 +72,8 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $tdir = ltrim($dir, '/');
 
         $tar->create();
-        $tar->AddFile("$dir/testdata1.txt");
-        $tar->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
+        $tar->addFile("$dir/testdata1.txt");
+        $tar->addFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
         $tar->addData('another/testdata3.txt', 'testcontent3');
 
         $data = $tar->getArchive();
@@ -95,17 +102,17 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      *
      * No check for format correctness
      */
-    public function test_createfile()
+    public function testCreateFile()
     {
         $tar = new Tar();
 
         $dir = dirname(__FILE__) . '/tar';
         $tdir = ltrim($dir, '/');
-        $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
+        $tmp = vfsStream::url('home_root_path/test.tar');
 
         $tar->create($tmp);
-        $tar->AddFile("$dir/testdata1.txt");
-        $tar->AddFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
+        $tar->addFile("$dir/testdata1.txt");
+        $tar->addFile("$dir/foobar/testdata2.txt", 'noway/testdata2.txt');
         $tar->addData('another/testdata3.txt', 'testcontent3');
         $tar->close();
 
@@ -128,14 +135,12 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertTrue(strpos($data, "foobar.txt") === false, 'File not in TAR');
 
         $this->assertTrue(strpos($data, "foobar") === false, 'Path not in TAR');
-
-        @unlink($tmp);
     }
 
     /**
      * List the contents of the prebuilt TAR files
      */
-    public function test_tarcontent()
+    public function testTarcontent()
     {
         $dir = dirname(__FILE__) . '/tar';
 
@@ -158,7 +163,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     /**
      * Create an archive and unpack it again
      */
-    public function test_dogfood()
+    public function testDogfood()
     {
         foreach ($this->extensions as $ext) {
             $input = glob(dirname(__FILE__) . '/../src/*');
@@ -184,7 +189,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             $this->nativeCheck($archive, $ext);
 
-            self::rdelete($extract);
+            self::RDelete($extract);
             unlink($archive);
         }
     }
@@ -224,7 +229,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     /**
      * Extract the prebuilt tar files
      */
-    public function test_tarextract()
+    public function testTarExtract()
     {
         $dir = dirname(__FILE__) . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
@@ -244,14 +249,14 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->assertFileExists($out . '/tar/foobar/testdata2.txt', "Extracted $file");
             $this->assertEquals(13, filesize($out . '/tar/foobar/testdata2.txt'), "Extracted $file");
 
-            self::rdelete($out);
+            self::RDelete($out);
         }
     }
 
     /**
      * Extract the prebuilt tar files with component stripping
      */
-    public function test_compstripextract()
+    public function testCompStripExtract()
     {
         $dir = dirname(__FILE__) . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
@@ -271,14 +276,14 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->assertFileExists($out . '/foobar/testdata2.txt', "Extracted $file");
             $this->assertEquals(13, filesize($out . '/foobar/testdata2.txt'), "Extracted $file");
 
-            self::rdelete($out);
+            self::RDelete($out);
         }
     }
 
     /**
      * Extract the prebuilt tar files with prefix stripping
      */
-    public function test_prefixstripextract()
+    public function testPrefixStripExtract()
     {
         $dir = dirname(__FILE__) . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
@@ -298,14 +303,14 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->assertFileExists($out . '/testdata2.txt', "Extracted $file");
             $this->assertEquals(13, filesize($out . '/testdata2.txt'), "Extracted $file");
 
-            self::rdelete($out);
+            self::RDelete($out);
         }
     }
 
     /**
      * Extract the prebuilt tar files with include regex
      */
-    public function test_includeextract()
+    public function testIncludeExtract()
     {
         $dir = dirname(__FILE__) . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
@@ -324,14 +329,14 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->assertFileExists($out . '/tar/foobar/testdata2.txt', "Extracted $file");
             $this->assertEquals(13, filesize($out . '/tar/foobar/testdata2.txt'), "Extracted $file");
 
-            self::rdelete($out);
+            self::RDelete($out);
         }
     }
 
     /**
      * Extract the prebuilt tar files with exclude regex
      */
-    public function test_excludeextract()
+    public function testExcludeExtract()
     {
         $dir = dirname(__FILE__) . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
@@ -350,14 +355,14 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             $this->assertFileNotExists($out . '/tar/foobar/testdata2.txt', "Extracted $file");
 
-            self::rdelete($out);
+            self::RDelete($out);
         }
     }
 
     /**
      * Check the extension to compression guesser
      */
-    public function test_filetype()
+    public function testFileType()
     {
         $tar = new Tar();
         $this->assertEquals(Tar::COMPRESS_NONE, $tar->filetype('foo'));
@@ -380,12 +385,12 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @depends test_ext_zlib
+     * @depends testExtZlibIsInstalled
      */
-    public function test_longpathextract()
+    public function testLongPathExtract()
     {
         $dir = dirname(__FILE__) . '/tar';
-        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
 
         foreach (array('ustar', 'gnu') as $format) {
             $tar = new Tar();
@@ -395,17 +400,15 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             $this->assertFileExists(
                 $out . '/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/test.txt'
             );
-
-            self::rdelete($out);
         }
     }
 
     // FS#1442
-    public function test_createlongfile()
+    public function testCreateLongFile()
     {
         $tar = new Tar();
         $tar->setCompression(0);
-        $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
+        $tmp = vfsStream::url('home_root_path/dwtartest');
 
         $path = '0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789.txt';
 
@@ -420,15 +423,13 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertTrue(strpos($data, 'testcontent1') !== false, 'content in TAR');
         $this->assertTrue(strpos($data, $path) !== false, 'path in TAR');
         $this->assertTrue(strpos($data, '@LongLink') !== false, '@LongLink in TAR');
-
-        @unlink($tmp);
     }
 
-    public function test_createlongpathustar()
+    public function testCreateLongPathTar()
     {
         $tar = new Tar();
         $tar->setCompression(0);
-        $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
+        $tmp = vfsStream::url('home_root_path/dwtartest');
 
         $path = '';
         for ($i = 0; $i < 11; $i++) {
@@ -449,15 +450,13 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertTrue(strpos($data, $path) !== false, 'path in TAR');
         $this->assertFalse(strpos($data, "$path/test.txt") !== false, 'full filename in TAR');
         $this->assertFalse(strpos($data, '@LongLink') !== false, '@LongLink in TAR');
-
-        @unlink($tmp);
     }
 
-    public function test_createlongpathgnu()
+    public function testCreateLongPathGnu()
     {
         $tar = new Tar();
         $tar->setCompression(0);
-        $tmp = tempnam(sys_get_temp_dir(), 'dwtartest');
+        $tmp = vfsStream::url('home_root_path/dwtartest');
 
         $path = '';
         for ($i = 0; $i < 20; $i++) {
@@ -478,18 +477,16 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertTrue(strpos($data, $path) !== false, 'path in TAR');
         $this->assertTrue(strpos($data, "$path/test.txt") !== false, 'full filename in TAR');
         $this->assertTrue(strpos($data, '@LongLink') !== false, '@LongLink in TAR');
-
-        @unlink($tmp);
     }
 
     /**
      * Extract a tarbomomb
-     * @depends test_ext_zlib
+     * @depends testExtZlibIsInstalled
      */
-    public function test_tarbomb()
+    public function testTarBomb()
     {
         $dir = dirname(__FILE__) . '/tar';
-        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
 
         $tar = new Tar();
 
@@ -501,14 +498,12 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertFileExists(
             $out . '/AAAAAAAAAAAAAAAAA/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.txt'
         );
-
-        self::rdelete($out);
     }
 
     /**
      * A single zero file should be just a header block + the footer
      */
-    public function test_zerofile()
+    public function testZeroFile()
     {
         $dir = dirname(__FILE__) . '/tar';
         $tar = new Tar();
@@ -520,7 +515,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertEquals(512 * 3, strlen($file)); // 1 header block + 2 footer blocks
     }
 
-    public function test_zerodata()
+    public function testZeroData()
     {
         $tar = new Tar();
         $tar->setCompression(0);
@@ -534,7 +529,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
     /**
      * A file of exactly one block should be just a header block + data block + the footer
      */
-    public function test_blockfile()
+    public function testBlockFile()
     {
         $dir = dirname(__FILE__) . '/tar';
         $tar = new Tar();
@@ -546,7 +541,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
         $this->assertEquals(512 * 4, strlen($file)); // 1 header block + data block + 2 footer blocks
     }
 
-    public function test_blockdata()
+    public function testBlockData()
     {
         $tar = new Tar();
         $tar->setCompression(0);
@@ -556,11 +551,11 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(512 * 4, strlen($file)); // 1 header block + data block + 2 footer blocks
     }
-    
+
     /**
-     * @depends test_ext_zlib
+     * @depends testExtZlibIsInstalled
      */
-    public function test_gzipisvalid()
+    public function testGzipIsValid()
     {
         foreach (['tgz', 'tar.gz'] as $ext) {
             $input = glob(dirname(__FILE__) . '/../src/*');
@@ -576,9 +571,9 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
             }
             $tar->save($archive);
             $this->assertFileExists($archive);
-            
+
             try {
-                $phar = new PharData($archive);
+                $phar = new \PharData($archive);
                 $phar->extractTo($extract);
             } catch (\Exception $e) {};
 
@@ -587,9 +582,148 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
 
             $this->nativeCheck($archive, $ext);
 
-            self::rdelete($extract);
+            self::RDelete($extract);
             unlink($archive);
         }
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testContentsWithInvalidArchiveStream()
+    {
+        $tar = new Tar();
+        $tar->contents();
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testExtractWithInvalidOutDir()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $out = '/root/invalid_out_dir';
+
+        $tar = new Tar();
+
+        $tar->open("$dir/tarbomb.tgz");
+        $tar->extract($out);
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testExtractWithArchiveStreamIsClosed()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $out = '/root/invalid_out_dir';
+
+        $tar = new Tar();
+
+        $tar->open("$dir/tarbomb.tgz");
+        $tar->close();
+        $tar->extract($out);
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testCreateWithInvalidFile()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $tar = new Tar();
+
+        $tar->open("$dir/tarbomb.tgz");
+        $tar->create('/root/invalid_file');
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testAddFileWithArchiveStreamIsClosed()
+    {
+        $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
+
+        $tar = new Tar();
+        $tar->create($archive);
+        $tar->close();
+        $tar->addFile('archive_file', false);
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testAddFileWithInvalidFile()
+    {
+        $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
+
+        $tar = new Tar();
+        $tar->create($archive);
+        $tar->addFile('archive_file', false);
+    }
+
+    /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testAddDataWithArchiveStreamIsClosed()
+    {
+        $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
+
+        $tar = new Tar();
+        $tar->create($archive);
+        $tar->close();
+        $tar->addData(false, '');
+    }
+
+    public function testCloseHasBeenClosed()
+    {
+        $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
+
+        $tar = new Tar();
+        $tar->create($archive);
+        $tar->close();
+
+        $this->assertNull($tar->close());
+    }
+
+    /**
+     * @depends testExtBz2IsInstalled
+     */
+    public function testGetArchiveWithBzipCompress()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $tar = new Tar();
+        $tar->setCompression(9, Tar::COMPRESS_BZIP);
+        $tar->create();
+        $tar->addFile("$dir/zero.txt", 'zero.txt');
+        $file = $tar->getArchive();
+
+        $this->assertInternalType('string', $file); // 1 header block + 2 footer blocks
+    }
+
+    public function testSaveWithCompressionAuto()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $tar = new Tar();
+        $tar->setCompression(-1);
+        $tar->create();
+        $tar->addFile("$dir/zero.txt", 'zero.txt');
+
+        $this->assertNull($tar->save(vfsStream::url('home_root_path/archive_file')));
+    }
+
+   /**
+     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     */
+    public function testSaveWithInvalidDestinationFile()
+    {
+        $dir = dirname(__FILE__) . '/tar';
+        $tar = new Tar();
+        $tar->setCompression();
+        $tar->create();
+        $tar->addFile("$dir/zero.txt", 'zero.txt');
+
+        $this->assertNull($tar->save(vfsStream::url('archive_file')));
     }
 
     /**
@@ -598,7 +732,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
      * @static
      * @param $target string
      */
-    public static function rdelete($target)
+    public static function RDelete($target)
     {
         if (!is_dir($target)) {
             unlink($target);
@@ -608,7 +742,7 @@ class Tar_TestCase extends PHPUnit_Framework_TestCase
                 if ($entry == '.' || $entry == '..') {
                     continue;
                 }
-                self::rdelete("$target/$entry");
+                self::RDelete("$target/$entry");
             }
             $dh->close();
             rmdir($target);
