@@ -629,12 +629,14 @@ class Zip extends Archive
      * similar enough. CP437 seems not to be available in mbstring. Lastly falls back to keeping the
      * string as is, which is still better than nothing.
      *
+     * On some systems iconv is available, but the codepage is not. We also check for that.
+     *
      * @param $string
      * @return string
      */
     protected function cpToUtf8($string)
     {
-        if (function_exists('iconv')) {
+        if (function_exists('iconv') && @iconv_strlen('', 'CP437') !== false) {
             return iconv('CP437', 'UTF-8', $string);
         } elseif (function_exists('mb_convert_encoding')) {
             return mb_convert_encoding($string, 'UTF-8', 'CP850');
