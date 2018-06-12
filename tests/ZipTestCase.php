@@ -1,16 +1,28 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace splitbrain\PHPArchive;
 
-use splitbrain\PHPArchive\Zip;
-use PHPUnit\Framework\TestCase;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\TestCase;
 
 class ZipTestCase extends TestCase
 {
+    /** @var int callback counter */
+    protected $counter = 0;
+
+    /** @inheritdoc */
     protected function setUp()
     {
         vfsStream::setup('home_root_path');
+    }
+
+    /**
+     * Callback check function
+     * @param FileInfo $fileinfo
+     */
+    public function increaseCounter($fileinfo) {
+        $this->assertInstanceOf('\\splitbrain\\PHPArchive\\FileInfo', $fileinfo);
+        $this->counter++;
     }
 
     /*
@@ -203,22 +215,29 @@ class ZipTestCase extends TestCase
         $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
         $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
 
+        $this->counter = 0;
         $zip = new Zip();
+        $zip->setCallback(array($this, 'increaseCounter'));
         $zip->create($archive);
-        foreach($input as $path) {
+        foreach ($input as $path) {
             $file = basename($path);
             $zip->addFile($path, $file);
         }
         $zip->close();
         $this->assertFileExists($archive);
+        $this->assertEquals(count($input), $this->counter);
 
+        $this->counter = 0;
         $zip = new Zip();
+        $zip->setCallback(array($this, 'increaseCounter'));
         $zip->open($archive);
         $zip->extract($extract, '', '/FileInfo\\.php/', '/.*\\.php/');
 
         $this->assertFileExists("$extract/Tar.php");
         $this->assertFileExists("$extract/Zip.php");
         $this->assertFileNotExists("$extract/FileInfo.php");
+
+        $this->assertEquals(count($input) - 1, $this->counter);
 
         $this->nativeCheck($archive);
         $this->native7ZipCheck($archive);

@@ -10,6 +10,9 @@ abstract class Archive
     const COMPRESS_GZIP = 1;
     const COMPRESS_BZIP = 2;
 
+    /** @var callable */
+    protected $callback;
+
     /**
      * Set the compression level and type
      *
@@ -117,6 +120,18 @@ abstract class Archive
      */
     abstract public function save($file);
 
+    /**
+     * Set a callback function to be called whenever a file is added or extracted.
+     *
+     * The callback is called with a FileInfo object as parameter. You can use this to show progress
+     * info during an operation.
+     *
+     * @param callable $callback
+     */
+    public function setCallback($callback)
+    {
+        $this->callback = $callback;
+    }
 }
 
 class ArchiveIOException extends \Exception

@@ -1,18 +1,21 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace splitbrain\PHPArchive;
 
-use splitbrain\PHPArchive\Tar;
-use PHPUnit\Framework\TestCase;
 use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\TestCase;
 
 class TarTestCase extends TestCase
 {
+    /** @var int callback counter */
+    protected $counter = 0;
+
     /**
      * file extensions that several tests use
      */
     protected $extensions = array('tar');
 
+    /** @inheritdoc */
     protected function setUp()
     {
         parent::setUp();
@@ -27,10 +30,20 @@ class TarTestCase extends TestCase
         vfsStream::setup('home_root_path');
     }
 
+    /** @inheritdoc */
     protected function tearDown()
     {
         parent::tearDown();
         $this->extensions[] = null;
+    }
+
+    /**
+     * Callback check function
+     * @param FileInfo $fileinfo
+     */
+    public function increaseCounter($fileinfo) {
+        $this->assertInstanceOf('\\splitbrain\\PHPArchive\\FileInfo', $fileinfo);
+        $this->counter++;
     }
 
     /*
@@ -170,7 +183,9 @@ class TarTestCase extends TestCase
             $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
             $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
 
+            $this->counter = 0;
             $tar = new Tar();
+            $tar->setCallback(array($this, 'increaseCounter'));
             $tar->create($archive);
             foreach ($input as $path) {
                 $file = basename($path);
@@ -178,14 +193,19 @@ class TarTestCase extends TestCase
             }
             $tar->close();
             $this->assertFileExists($archive);
+            $this->assertEquals(count($input), $this->counter);
 
+            $this->counter = 0;
             $tar = new Tar();
+            $tar->setCallback(array($this, 'increaseCounter'));
             $tar->open($archive);
             $tar->extract($extract, '', '/FileInfo\\.php/', '/.*\\.php/');
 
             $this->assertFileExists("$extract/Tar.php");
             $this->assertFileExists("$extract/Zip.php");
             $this->assertFileNotExists("$extract/FileInfo.php");
+
+            $this->assertEquals(count($input) - 1, $this->counter);
 
             $this->nativeCheck($archive, $ext);
 

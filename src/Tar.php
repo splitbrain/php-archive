@@ -187,6 +187,9 @@ class Tar extends Archive
                 $this->skipbytes(ceil($header['size'] / 512) * 512); // the size is usually 0 for directories
             }
 
+            if(is_callable($this->callback)) {
+                call_user_func($this->callback, $fileinfo);
+            }
             $extracted[] = $fileinfo;
         }
 
@@ -276,6 +279,10 @@ class Tar extends Archive
             $this->close();
             throw new ArchiveCorruptedException("The size of $file changed while reading, archive corrupted. read $read expected ".$fileinfo->getSize());
         }
+
+        if(is_callable($this->callback)) {
+            call_user_func($this->callback, $fileinfo);
+        }
     }
 
     /**
@@ -301,6 +308,10 @@ class Tar extends Archive
 
         for ($s = 0; $s < $len; $s += 512) {
             $this->writebytes(pack("a512", substr($data, $s, 512)));
+        }
+
+        if (is_callable($this->callback)) {
+            call_user_func($this->callback, $fileinfo);
         }
     }
 

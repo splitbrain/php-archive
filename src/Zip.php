@@ -155,6 +155,9 @@ class Zip extends Archive
 
             // nothing more to do for directories
             if ($fileinfo->getIsdir()) {
+                if(is_callable($this->callback)) {
+                    call_user_func($this->callback, $fileinfo);
+                }
                 continue;
             }
 
@@ -231,6 +234,9 @@ class Zip extends Archive
 
             touch($output, $fileinfo->getMtime());
             //FIXME what about permissions?
+            if(is_callable($this->callback)) {
+                call_user_func($this->callback, $fileinfo);
+            }
         }
 
         $this->close();
@@ -353,6 +359,10 @@ class Zip extends Archive
             $name,
             (bool) $this->complevel
         );
+
+        if(is_callable($this->callback)) {
+            call_user_func($this->callback, $fileinfo);
+        }
     }
 
     /**
