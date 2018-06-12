@@ -338,6 +338,3 @@ class FileInfo
     }
 }
 
-class FileInfoException extends \Exception
-{
-}

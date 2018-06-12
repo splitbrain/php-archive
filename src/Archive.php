@@ -133,15 +133,3 @@ abstract class Archive
         $this->callback = $callback;
     }
 }
-
-class ArchiveIOException extends \Exception
-{
-}
-
-class ArchiveIllegalCompressionException extends \Exception
-{
-}
-
-class ArchiveCorruptedException extends \Exception
-{
-}
