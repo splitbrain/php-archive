@@ -280,9 +280,10 @@ class Zip extends Archive
     /**
      * Add a file to the current archive using an existing file in the filesystem
      *
-     * @param string          $file     path to the original file
+     * @param string $file path to the original file
      * @param string|FileInfo $fileinfo either the name to use in archive (string) or a FileInfo oject with all meta data, empty to take from original
      * @throws ArchiveIOException
+     * @throws FileInfoException
      */
     public function addFile($file, $fileinfo = '')
     {
@@ -370,6 +371,7 @@ class Zip extends Archive
      *
      * After a call to this function no more data can be added to the archive, for
      * read access no reading is allowed anymore
+     * @throws ArchiveIOException
      */
     public function close()
     {
@@ -413,6 +415,7 @@ class Zip extends Archive
      * Returns the created in-memory archive data
      *
      * This implicitly calls close() on the Archive
+     * @throws ArchiveIOException
      */
     public function getArchive()
     {

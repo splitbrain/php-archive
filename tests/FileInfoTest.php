@@ -1,8 +1,7 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace splitbrain\PHPArchive;
 
-use splitbrain\PHPArchive\FileInfo;
 use PHPUnit\Framework\TestCase;
 
 class FileInfoTest extends TestCase
@@ -101,10 +100,10 @@ class FileInfoTest extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\FileInfoException
+     * @expectedException \splitbrain\PHPArchive\FileInfoException
      */
     public function testFromPathWithFileNotExisted()
     {
-        $fileinfo = FileInfo::fromPath('invalid_file_path');
+        FileInfo::fromPath('invalid_file_path');
     }
 }

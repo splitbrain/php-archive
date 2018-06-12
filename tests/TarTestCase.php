@@ -63,7 +63,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testTarFileIsNotExisted()
     {
@@ -162,6 +162,7 @@ class TarTestCase extends TestCase
             $file = "$dir/test.$ext";
 
             $tar->open($file);
+            /** @var FileInfo[] $content */
             $content = $tar->contents();
 
             $this->assertCount(4, $content, "Contents of $file");
@@ -595,7 +596,8 @@ class TarTestCase extends TestCase
             try {
                 $phar = new \PharData($archive);
                 $phar->extractTo($extract);
-            } catch (\Exception $e) {};
+            } catch(\Exception $e) {
+            };
 
             $this->assertFileExists("$extract/Tar.php");
             $this->assertFileExists("$extract/Zip.php");
@@ -608,7 +610,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testContentsWithInvalidArchiveStream()
     {
@@ -617,7 +619,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testExtractWithInvalidOutDir()
     {
@@ -631,7 +633,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testExtractWithArchiveStreamIsClosed()
     {
@@ -646,7 +648,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testCreateWithInvalidFile()
     {
@@ -658,7 +660,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testAddFileWithArchiveStreamIsClosed()
     {
@@ -671,7 +673,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testAddFileWithInvalidFile()
     {
@@ -683,7 +685,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testAddDataWithArchiveStreamIsClosed()
     {
@@ -703,7 +705,8 @@ class TarTestCase extends TestCase
         $tar->create($archive);
         $tar->close();
 
-        $this->assertNull($tar->close());
+        $tar->close();
+        $this->assertTrue(true); // succeed if no exception, yet
     }
 
     /**
@@ -729,11 +732,12 @@ class TarTestCase extends TestCase
         $tar->create();
         $tar->addFile("$dir/zero.txt", 'zero.txt');
 
-        $this->assertNull($tar->save(vfsStream::url('home_root_path/archive_file')));
+        $tar->save(vfsStream::url('home_root_path/archive_file'));
+        $this->assertTrue(true); // succeed if no exception, yet
     }
 
-   /**
-     * @expectedException splitbrain\PHPArchive\ArchiveIOException
+    /**
+     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
      */
     public function testSaveWithInvalidDestinationFile()
     {
@@ -743,7 +747,8 @@ class TarTestCase extends TestCase
         $tar->create();
         $tar->addFile("$dir/zero.txt", 'zero.txt');
 
-        $this->assertNull($tar->save(vfsStream::url('archive_file')));
+        $tar->save(vfsStream::url('archive_file'));
+        $this->assertTrue(true); // succeed if no exception, yet
     }
 
     /**
