@@ -34,10 +34,13 @@ class Zip extends Archive
      *
      * @param int $level Compression level (0 to 9)
      * @param int $type  Type of compression to use ignored for ZIP
-     * @return mixed
+     * @throws ArchiveIllegalCompressionException
      */
     public function setCompression($level = 9, $type = Archive::COMPRESS_AUTO)
     {
+        if ($level < -1 || $level > 9) {
+            throw new ArchiveIllegalCompressionException('Compression level should be between -1 and 9');
+        }
         $this->complevel = $level;
     }
 

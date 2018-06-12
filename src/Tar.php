@@ -28,12 +28,15 @@ class Tar extends Archive
      * Sets the compression to use
      *
      * @param int $level Compression level (0 to 9)
-     * @param int $type  Type of compression to use (use COMPRESS_* constants)
-     * @return mixed
+     * @param int $type Type of compression to use (use COMPRESS_* constants)
+     * @throws ArchiveIllegalCompressionException
      */
     public function setCompression($level = 9, $type = Archive::COMPRESS_AUTO)
     {
         $this->compressioncheck($type);
+        if ($level < -1 || $level > 9) {
+            throw new ArchiveIllegalCompressionException('Compression level should be between -1 and 9');
+        }
         $this->comptype  = $type;
         $this->complevel = $level;
         if($level == 0) $this->comptype = Archive::COMPRESS_NONE;

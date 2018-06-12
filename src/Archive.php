@@ -15,7 +15,7 @@ abstract class Archive
      *
      * @param int $level Compression level (0 to 9)
      * @param int $type  Type of compression to use (use COMPRESS_* constants)
-     * @return mixed
+     * @throws ArchiveIllegalCompressionException
      */
     abstract public function setCompression($level = 9, $type = Archive::COMPRESS_AUTO);
 
