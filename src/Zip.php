@@ -232,7 +232,7 @@ class Zip extends Archive
                 unlink($extractto); // remove temporary gz file
             }
 
-            touch($output, $fileinfo->getMtime());
+            @touch($output, $fileinfo->getMtime());
             //FIXME what about permissions?
             if(is_callable($this->callback)) {
                 call_user_func($this->callback, $fileinfo);

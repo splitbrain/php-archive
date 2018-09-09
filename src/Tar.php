@@ -184,8 +184,8 @@ class Tar extends Archive
                 }
 
                 fclose($fp);
-                touch($output, $fileinfo->getMtime());
-                chmod($output, $fileinfo->getMode());
+                @touch($output, $fileinfo->getMtime());
+                @chmod($output, $fileinfo->getMode());
             } else {
                 $this->skipbytes(ceil($header['size'] / 512) * 512); // the size is usually 0 for directories
             }
