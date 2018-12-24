@@ -77,19 +77,16 @@ class Zip extends Archive
             throw new ArchiveIOException('Can not read from a closed archive');
         }
 
-        $result = array();
-
         $centd = $this->readCentralDir();
 
         @rewind($this->fh);
         @fseek($this->fh, $centd['offset']);
 
         for ($i = 0; $i < $centd['entries']; $i++) {
-            $result[] = $this->header2fileinfo($this->readCentralFileHeader());
+            yield $this->header2fileinfo($this->readCentralFileHeader());
         }
 
         $this->close();
-        return $result;
     }
 
     /**

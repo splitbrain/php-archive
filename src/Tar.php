@@ -92,7 +92,6 @@ class Tar extends Archive
             throw new ArchiveIOException('Can not read from a closed archive');
         }
 
-        $result = array();
         while ($read = $this->readbytes(512)) {
             $header = $this->parseHeader($read);
             if (!is_array($header)) {
@@ -100,11 +99,10 @@ class Tar extends Archive
             }
 
             $this->skipbytes(ceil($header['size'] / 512) * 512);
-            $result[] = $this->header2fileinfo($header);
+            yield $this->header2fileinfo($header);
         }
 
         $this->close();
-        return $result;
     }
 
     /**
