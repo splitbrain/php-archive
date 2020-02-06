@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>Class splitbrain\PHPArchive\Tar</title>
+
+	<link rel="stylesheet" href="resources/bootstrap.min.css?973e37a8502921d56bc02bb55321f45b072b6f71">
+	<link rel="stylesheet" href="resources/style.css?49f43d3208c5d7e33fa16d36107a345bf11cc00d">
+
+</head>
+
+<body>
+	<nav id="navigation" class="navbar navbar-default navbar-fixed-top">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a href="index.html" class="navbar-brand">Overview</a>
+			</div>
+			<div class="collapse navbar-collapse">
+
+                <form id="search" class="navbar-form navbar-left" role="search">
+                    <input type="hidden" name="cx" value="">
+                    <input type="hidden" name="ie" value="UTF-8">
+                    <div class="form-group">
+                        <input type="text" name="q" class="search-query form-control" placeholder="Search">
+					</div>
+				</form>
+
+				<ul class="nav navbar-nav">
+					<li>
+						<a href="namespace-splitbrain.PHPArchive.html" title="Summary of splitbrain\PHPArchive"><span>Namespace</span></a>
+					</li>
+					<li class="active">
+<span>Class</span>					</li>
+
+					<li class="divider-vertical"></li>
+
+					<li>
+						<a href="tree.html" title="Tree view of classes, interfaces, traits and exceptions"><span>Tree</span></a>
+					</li>
+
+						<li>
+							<a href="annotation-group-deprecated.html" title="List of elements with deprecated annotation">
+								<span>Deprecated</span>
+							</a>
+						</li>
+						<li>
+							<a href="annotation-group-todo.html" title="List of elements with todo annotation">
+								<span>Todo</span>
+							</a>
+						</li>
+
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<div id="left">
+	<div id="menu">
+
+		<div id="groups">
+				<h3>Namespaces</h3>
+			<ul>
+					<li class="active">
+						<a href="namespace-splitbrain.html">
+							splitbrain<span></span>
+						</a>
+							<ul>
+					<li class="active">
+						<a href="namespace-splitbrain.PHPArchive.html">
+							PHPArchive						</a>
+							</li>
+								</ul></li>
+			</ul>
+		</div>
+
+
+		<div id="elements">
+			<h3>Classes</h3>
+			<ul>
+				<li><a href="class-splitbrain.PHPArchive.Archive.html">Archive</a></li>
+				<li><a href="class-splitbrain.PHPArchive.FileInfo.html">FileInfo</a></li>
+				<li class="active"><a href="class-splitbrain.PHPArchive.Tar.html">Tar</a></li>
+				<li><a href="class-splitbrain.PHPArchive.Zip.html">Zip</a></li>
+			</ul>
+
+
+
+			<h3>Exceptions</h3>
+			<ul>
+				<li><a href="class-splitbrain.PHPArchive.ArchiveCorruptedException.html">ArchiveCorruptedException</a></li>
+				<li><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">ArchiveIllegalCompressionException</a></li>
+				<li><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">ArchiveIOException</a></li>
+				<li><a href="class-splitbrain.PHPArchive.FileInfoException.html">FileInfoException</a></li>
+			</ul>
+
+
+		</div>
+	</div>
+</div>
+
+<div id="splitter"></div>
+
+<div id="right">
+	<div id="rightInner">
+<div id="content" class="class">
+	<h1>Class Tar</h1>
+
+
+	<div class="description">
+	<p>Class Tar</p>
+
+<p>Creates or extracts Tar archives. Supports gz and bzip compression</p>
+
+<p>Long pathnames (>100 chars) are supported in POSIX ustar and GNU longlink formats.</p>
+	</div>
+
+	<dl class="tree well">
+		<dd style="padding-left:0px">
+			<a href="class-splitbrain.PHPArchive.Archive.html"><span>splitbrain\PHPArchive\Archive</span></a>
+			
+			
+			
+		</dd>
+		<dd style="padding-left:30px">
+			<img src="resources/inherit.png" alt="Extended by">
+<b><span>splitbrain\PHPArchive\Tar</span></b>			
+			
+			
+		</dd>
+	</dl>
+
+
+
+
+
+
+
+
+	<div class="alert alert-info">
+		
+		
+		<b>Namespace:</b> <a href="namespace-splitbrain.html">splitbrain</a>\<a href="namespace-splitbrain.PHPArchive.html">PHPArchive</a><br>
+		<b>Package:</b> splitbrain\PHPArchive<br>
+
+				<b>License:</b>
+				<a href="MIT">MIT</a><br>
+				<b>Author:</b>
+				Andreas Gohr <a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#x6f;&#x3a;&#x61;&#x6e;&#x64;&#x69;&#x40;&#x73;&#x70;&#108;&#105;&#116;&#98;&#114;&#97;&#105;&#110;&#46;&#111;&#114;&#103;">&#x61;&#x6e;&#x64;&#x69;&#x40;&#x73;&#x70;&#108;&#105;&#116;&#98;&#114;&#97;&#105;&#110;&#46;&#111;&#114;&#103;</a><br>
+			<b>Located at</b> <a href="source-class-splitbrain.PHPArchive.Tar.html#5-692" title="Go to source code">Tar.php</a>
+		<br>
+	</div>
+
+
+
+		<div class="panel panel-default">
+			<div class="panel-heading"><h2>Methods summary</h2></div>
+			<table class="summary table table-bordered table-striped methods" id="methods">
+		<tr data-order="setCompression" id="_setCompression">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setCompression">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#27-44" title="Go to source code">setCompression</a>( <span>integer <var>$level</var> = <span class="php-num">9</span></span>, <span>integer <var>$type</var> = <code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_AUTO">splitbrain\PHPArchive\Archive::<b>COMPRESS_AUTO</b></a></code></span> )</code>
+
+			<div class="description short">
+				<p>Sets the compression to use</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Sets the compression to use</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$level</var></dt>
+						<dd>Compression level (0 to 9)</dd>
+						<dt><var>$type</var></dt>
+						<dd>Type of compression to use (use COMPRESS_* constants)</dd>
+					</dl></div>
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">splitbrain\PHPArchive\ArchiveIllegalCompressionException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="open" id="_open">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_open">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#46-75" title="Go to source code">open</a>( <span>string <var>$file</var></span> )</code>
+
+			<div class="description short">
+				<p>Open an existing TAR file for reading</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Open an existing TAR file for reading</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$file</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">splitbrain\PHPArchive\ArchiveIllegalCompressionException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="contents" id="_contents">
+
+			<td class="attributes"><code>
+				 public 
+				<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_contents">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#77-108" title="Go to source code">contents</a>( )</code>
+
+			<div class="description short">
+				<p>Read the contents of a TAR archive</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Read the contents of a TAR archive</p>
+
+<p>This function lists the files stored in the archive</p>
+
+<p>The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
+Reopen the file with open() again if you want to do additional operations</p>
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+					</div>
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
+						<code><a href="class-splitbrain.PHPArchive.ArchiveCorruptedException.html">splitbrain\PHPArchive\ArchiveCorruptedException</a></code>
+					</div>
+
+					<h4>Returns</h4>
+					<div class="list">
+							FileInfo[]<br>
+					</div>
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="extract" id="_extract">
+
+			<td class="attributes"><code>
+				 public 
+				<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_extract">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#110-201" title="Go to source code">extract</a>( <span>string <var>$outdir</var></span>, <span>integer|string <var>$strip</var> = <span class="php-quote">''</span></span>, <span>string <var>$exclude</var> = <span class="php-quote">''</span></span>, <span>string <var>$include</var> = <span class="php-quote">''</span></span> )</code>
+
+			<div class="description short">
+				<p>Extract an existing TAR archive</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Extract an existing TAR archive</p>
+
+<p>The $strip parameter allows you to strip a certain number of path components from the filenames
+found in the tar file, similar to the --strip-components feature of GNU tar. This is triggered when
+an integer is passed as $strip.
+Alternatively a fixed string prefix may be passed in $strip. If the filename matches this prefix,
+the prefix will be stripped. It is recommended to give prefixes with a trailing slash.</p>
+
+<p>By default this will extract all files found in the archive. You can restrict the output using the $include
+and $exclude parameter. Both expect a full regular expression (including delimiters and modifiers). If
+$include is set only files that match this expression will be extracted. Files that match the $exclude
+expression will never be extracted. Both parameters can be used in combination. Expressions are matched against
+stripped filenames as described above.</p>
+
+<p>The archive is closed afer reading the contents, because rewinding is not possible in bzip2 streams.
+Reopen the file with open() again if you want to do additional operations</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$outdir</var></dt>
+						<dd>the target directory for extracting</dd>
+						<dt><var>$strip</var></dt>
+						<dd>either the number of path components or a fixed prefix to strip</dd>
+						<dt><var>$exclude</var></dt>
+						<dd>a regular expression of files to exclude</dd>
+						<dt><var>$include</var></dt>
+						<dd>a regular expression of files to include</dd>
+					</dl></div>
+
+					<h4>Returns</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+					</div>
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
+						<code><a href="class-splitbrain.PHPArchive.ArchiveCorruptedException.html">splitbrain\PHPArchive\ArchiveCorruptedException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="create" id="_create">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_create">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#203-238" title="Go to source code">create</a>( <span>string <var>$file</var> = <span class="php-quote">''</span></span> )</code>
+
+			<div class="description short">
+				<p>Create a new TAR file</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Create a new TAR file</p>
+
+<p>If $file is empty, the tar file will be created in memory</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$file</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">splitbrain\PHPArchive\ArchiveIllegalCompressionException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="addFile" id="_addFile">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_addFile">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#240-291" title="Go to source code">addFile</a>( <span>string <var>$file</var></span>, <span>string|<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code> <var>$fileinfo</var> = <span class="php-quote">''</span></span> )</code>
+
+			<div class="description short">
+				<p>Add a file to the current TAR archive using an existing file in the filesystem</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Add a file to the current TAR archive using an existing file in the filesystem</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$file</var></dt>
+						<dd>path to the original file</dd>
+						<dt><var>$fileinfo</var></dt>
+						<dd>either the name to us in archive (string) or a FileInfo oject with all meta data, empty to take from original</dd>
+					</dl></div>
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveCorruptedException.html">splitbrain\PHPArchive\ArchiveCorruptedException</a></code><br>when the file changes while reading it, the archive will be corrupt and should be deleted<br>
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>there was trouble reading the given file, it was not added<br>
+						<code><a href="class-splitbrain.PHPArchive.FileInfoException.html">splitbrain\PHPArchive\FileInfoException</a></code><br>trouble reading file info, it was not added
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="addData" id="_addData">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_addData">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#293-321" title="Go to source code">addData</a>( <span>string|<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code> <var>$fileinfo</var></span>, <span>string <var>$data</var></span> )</code>
+
+			<div class="description short">
+				<p>Add a file to the current TAR archive using the given $data as content</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Add a file to the current TAR archive using the given $data as content</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$fileinfo</var></dt>
+						<dd>either the name to us in archive (string) or a FileInfo oject with all meta data</dd>
+						<dt><var>$data</var></dt>
+						<dd>binary content of the file to add</dd>
+					</dl></div>
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="close" id="_close">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_close">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#323-363" title="Go to source code">close</a>( )</code>
+
+			<div class="description short">
+				<p>Add the closing footer to the archive if in write mode, close all file handles</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Add the closing footer to the archive if in write mode, close all file handles</p>
+
+<p>After a call to this function no more data can be added to the archive, for
+read access no reading is allowed anymore</p>
+
+<p>"Physically, an archive consists of a series of file entries terminated by an end-of-archive entry, which
+consists of two 512 blocks of zero bytes"</p>
+
+
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+					</div>
+
+					<h4>Link</h4>
+					<div class="list">
+							<a href="http://www.gnu.org/software/tar/manual/html_chapter/tar_8.html#SEC134">http://www.gnu.org/software/tar/manual/html_chapter/tar_8.html#SEC134</a><br>
+					</div>
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getArchive" id="_getArchive">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getArchive">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#365-386" title="Go to source code">getArchive</a>( )</code>
+
+			<div class="description short">
+				<p>Returns the created in-memory archive data</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Returns the created in-memory archive data</p>
+
+<p>This implicitly calls close() on the Archive</p>
+
+
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="save" id="_save">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_save">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#388-407" title="Go to source code">save</a>( <span>string <var>$file</var></span> )</code>
+
+			<div class="description short">
+				<p>Save the created in-memory archive data</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Save the created in-memory archive data</p>
+
+<p>Note: It more memory effective to specify the filename in the create() function and
+let the library work on the new file directly.</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$file</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
+						<code><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">splitbrain\PHPArchive\ArchiveIllegalCompressionException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="filetype" id="_filetype">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_filetype">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.Tar.html#658-690" title="Go to source code">filetype</a>( <span>string <var>$file</var></span> )</code>
+
+			<div class="description short">
+				<p>Guesses the wanted compression from the given file</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Guesses the wanted compression from the given file</p>
+
+<p>Uses magic bytes for existing files, the file extension otherwise</p>
+
+<p>You don't need to call this yourself. It's used when you pass Archive::COMPRESS_AUTO somewhere</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$file</var></dt>
+						<dd></dd>
+					</dl></div>
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+			</table>
+		</div>
+
+		<div class="panel panel-default">
+	        <div class="panel-heading"><h3>Methods inherited from <a href="class-splitbrain.PHPArchive.Archive.html#methods">splitbrain\PHPArchive\Archive</a></h3></div>
+			<p class="elementList">
+				<code><a href="class-splitbrain.PHPArchive.Archive.html#_setCallback">setCallback()</a></code>
+			</p>
+		</div>
+
+
+
+
+
+
+
+		<div class="panel panel-default">
+            <div class="panel-heading"><h2>Constants summary</h2></div>
+		</div>
+
+		<div class="panel panel-default">
+            <div class="panel-heading"><h3>Constants inherited from <a href="class-splitbrain.PHPArchive.Archive.html#constants">splitbrain\PHPArchive\Archive</a></h3></div>
+			<p class="elementList">
+				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_AUTO"><b>COMPRESS_AUTO</b></a></code>, 
+				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_BZIP"><b>COMPRESS_BZIP</b></a></code>, 
+				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_GZIP"><b>COMPRESS_GZIP</b></a></code>, 
+				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_NONE"><b>COMPRESS_NONE</b></a></code>
+			</p>
+		</div>
+
+
+
+</div>
+	</div>
+
+	<div id="footer">
+		 API documentation generated by <a href="http://apigen.org">ApiGen</a>
+	</div>
+</div>
+<script src="resources/combined.js"></script>
+<script src="elementlist.js"></script>
+</body>
+</html>

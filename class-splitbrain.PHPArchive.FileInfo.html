@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>Class splitbrain\PHPArchive\FileInfo</title>
+
+	<link rel="stylesheet" href="resources/bootstrap.min.css?973e37a8502921d56bc02bb55321f45b072b6f71">
+	<link rel="stylesheet" href="resources/style.css?49f43d3208c5d7e33fa16d36107a345bf11cc00d">
+
+</head>
+
+<body>
+	<nav id="navigation" class="navbar navbar-default navbar-fixed-top">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a href="index.html" class="navbar-brand">Overview</a>
+			</div>
+			<div class="collapse navbar-collapse">
+
+                <form id="search" class="navbar-form navbar-left" role="search">
+                    <input type="hidden" name="cx" value="">
+                    <input type="hidden" name="ie" value="UTF-8">
+                    <div class="form-group">
+                        <input type="text" name="q" class="search-query form-control" placeholder="Search">
+					</div>
+				</form>
+
+				<ul class="nav navbar-nav">
+					<li>
+						<a href="namespace-splitbrain.PHPArchive.html" title="Summary of splitbrain\PHPArchive"><span>Namespace</span></a>
+					</li>
+					<li class="active">
+<span>Class</span>					</li>
+
+					<li class="divider-vertical"></li>
+
+					<li>
+						<a href="tree.html" title="Tree view of classes, interfaces, traits and exceptions"><span>Tree</span></a>
+					</li>
+
+						<li>
+							<a href="annotation-group-deprecated.html" title="List of elements with deprecated annotation">
+								<span>Deprecated</span>
+							</a>
+						</li>
+						<li>
+							<a href="annotation-group-todo.html" title="List of elements with todo annotation">
+								<span>Todo</span>
+							</a>
+						</li>
+
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<div id="left">
+	<div id="menu">
+
+		<div id="groups">
+				<h3>Namespaces</h3>
+			<ul>
+					<li class="active">
+						<a href="namespace-splitbrain.html">
+							splitbrain<span></span>
+						</a>
+							<ul>
+					<li class="active">
+						<a href="namespace-splitbrain.PHPArchive.html">
+							PHPArchive						</a>
+							</li>
+								</ul></li>
+			</ul>
+		</div>
+
+
+		<div id="elements">
+			<h3>Classes</h3>
+			<ul>
+				<li><a href="class-splitbrain.PHPArchive.Archive.html">Archive</a></li>
+				<li class="active"><a href="class-splitbrain.PHPArchive.FileInfo.html">FileInfo</a></li>
+				<li><a href="class-splitbrain.PHPArchive.Tar.html">Tar</a></li>
+				<li><a href="class-splitbrain.PHPArchive.Zip.html">Zip</a></li>
+			</ul>
+
+
+
+			<h3>Exceptions</h3>
+			<ul>
+				<li><a href="class-splitbrain.PHPArchive.ArchiveCorruptedException.html">ArchiveCorruptedException</a></li>
+				<li><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">ArchiveIllegalCompressionException</a></li>
+				<li><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">ArchiveIOException</a></li>
+				<li><a href="class-splitbrain.PHPArchive.FileInfoException.html">FileInfoException</a></li>
+			</ul>
+
+
+		</div>
+	</div>
+</div>
+
+<div id="splitter"></div>
+
+<div id="right">
+	<div id="rightInner">
+<div id="content" class="class">
+	<h1>Class FileInfo</h1>
+
+
+	<div class="description">
+	<p>Class FileInfo</p>
+
+<p>stores meta data about a file in an Archive</p>
+	</div>
+
+
+
+
+
+
+
+
+
+	<div class="alert alert-info">
+		
+		
+		<b>Namespace:</b> <a href="namespace-splitbrain.html">splitbrain</a>\<a href="namespace-splitbrain.PHPArchive.html">PHPArchive</a><br>
+		<b>Package:</b> splitbrain\PHPArchive<br>
+
+				<b>License:</b>
+				<a href="MIT">MIT</a><br>
+				<b>Author:</b>
+				Andreas Gohr <a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#x6f;&#x3a;&#x61;&#x6e;&#x64;&#x69;&#x40;&#x73;&#x70;&#108;&#105;&#116;&#98;&#114;&#97;&#105;&#110;&#46;&#111;&#114;&#103;">&#x61;&#x6e;&#x64;&#x69;&#x40;&#x73;&#x70;&#108;&#105;&#116;&#98;&#114;&#97;&#105;&#110;&#46;&#111;&#114;&#103;</a><br>
+			<b>Located at</b> <a href="source-class-splitbrain.PHPArchive.FileInfo.html#5-339" title="Go to source code">FileInfo.php</a>
+		<br>
+	</div>
+
+
+
+		<div class="panel panel-default">
+			<div class="panel-heading"><h2>Methods summary</h2></div>
+			<table class="summary table table-bordered table-striped methods" id="methods">
+		<tr data-order="__construct" id="___construct">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#___construct">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#29-38" title="Go to source code">__construct</a>( <span>string <var>$path</var> = <span class="php-quote">''</span></span> )</code>
+
+			<div class="description short">
+				<p>initialize dynamic defaults</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>initialize dynamic defaults</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$path</var></dt>
+						<dd>The path of the file, can also be set later through setPath()</dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="fromPath" id="_fromPath">
+
+			<td class="attributes"><code>
+				 public static
+				<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code>
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_fromPath">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#40-74" title="Go to source code">fromPath</a>( <span>string <var>$path</var></span>, <span>string <var>$as</var> = <span class="php-quote">''</span></span> )</code>
+
+			<div class="description short">
+				<p>Factory to build FileInfo from existing file or directory</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Factory to build FileInfo from existing file or directory</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$path</var></dt>
+						<dd>path to a file on the local file system</dd>
+						<dt><var>$as</var></dt>
+						<dd>optional path to use inside the archive</dd>
+					</dl></div>
+
+					<h4>Returns</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code>
+					</div>
+
+					<h4>Throws</h4>
+					<div class="list">
+						<code><a href="class-splitbrain.PHPArchive.FileInfoException.html">splitbrain\PHPArchive\FileInfoException</a></code>
+					</div>
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getSize" id="_getSize">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getSize">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#76-83" title="Go to source code">getSize</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer<br>the filesize. always 0 for directories
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setSize" id="_setSize">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setSize">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#85-91" title="Go to source code">setSize</a>( <span>integer <var>$size</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$size</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getCompressedSize" id="_getCompressedSize">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getCompressedSize">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#93-99" title="Go to source code">getCompressedSize</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setCompressedSize" id="_setCompressedSize">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setCompressedSize">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#101-107" title="Go to source code">setCompressedSize</a>( <span>integer <var>$csize</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$csize</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getMtime" id="_getMtime">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getMtime">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#109-115" title="Go to source code">getMtime</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setMtime" id="_setMtime">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setMtime">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#117-123" title="Go to source code">setMtime</a>( <span>integer <var>$mtime</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$mtime</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getGid" id="_getGid">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getGid">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#125-131" title="Go to source code">getGid</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setGid" id="_setGid">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setGid">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#133-139" title="Go to source code">setGid</a>( <span>integer <var>$gid</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$gid</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getUid" id="_getUid">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getUid">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#141-147" title="Go to source code">getUid</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setUid" id="_setUid">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setUid">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#149-155" title="Go to source code">setUid</a>( <span>integer <var>$uid</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$uid</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getComment" id="_getComment">
+
+			<td class="attributes"><code>
+				 public 
+				string
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getComment">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#157-163" title="Go to source code">getComment</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						string
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setComment" id="_setComment">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setComment">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#165-171" title="Go to source code">setComment</a>( <span>string <var>$comment</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$comment</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getGroup" id="_getGroup">
+
+			<td class="attributes"><code>
+				 public 
+				string
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getGroup">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#173-179" title="Go to source code">getGroup</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						string
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setGroup" id="_setGroup">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setGroup">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#181-187" title="Go to source code">setGroup</a>( <span>string <var>$group</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$group</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getIsdir" id="_getIsdir">
+
+			<td class="attributes"><code>
+				 public 
+				boolean
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getIsdir">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#189-195" title="Go to source code">getIsdir</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						boolean
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setIsdir" id="_setIsdir">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setIsdir">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#197-207" title="Go to source code">setIsdir</a>( <span>boolean <var>$isdir</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$isdir</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getMode" id="_getMode">
+
+			<td class="attributes"><code>
+				 public 
+				integer
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getMode">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#209-215" title="Go to source code">getMode</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						integer
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setMode" id="_setMode">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setMode">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#217-223" title="Go to source code">setMode</a>( <span>integer <var>$mode</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$mode</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getOwner" id="_getOwner">
+
+			<td class="attributes"><code>
+				 public 
+				string
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getOwner">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#225-231" title="Go to source code">getOwner</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						string
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setOwner" id="_setOwner">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setOwner">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#233-239" title="Go to source code">setOwner</a>( <span>string <var>$owner</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$owner</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="getPath" id="_getPath">
+
+			<td class="attributes"><code>
+				 public 
+				string
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_getPath">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#241-247" title="Go to source code">getPath</a>( )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+
+					<h4>Returns</h4>
+					<div class="list">
+						string
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="setPath" id="_setPath">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_setPath">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#249-255" title="Go to source code">setPath</a>( <span>string <var>$path</var></span> )</code>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$path</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="strip" id="_strip">
+
+			<td class="attributes"><code>
+				 public 
+				
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_strip">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#281-316" title="Go to source code">strip</a>( <span>integer|string <var>$strip</var></span> )</code>
+
+			<div class="description short">
+				<p>Strip given prefix or number of path segments from the filename</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Strip given prefix or number of path segments from the filename</p>
+
+<p>The $strip parameter allows you to strip a certain number of path components from the filenames
+found in the tar file, similar to the --strip-components feature of GNU tar. This is triggered when
+an integer is passed as $strip.
+Alternatively a fixed string prefix may be passed in $strip. If the filename matches this prefix,
+the prefix will be stripped. It is recommended to give prefixes with a trailing slash.</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$strip</var></dt>
+						<dd></dd>
+					</dl></div>
+
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+		<tr data-order="match" id="_match">
+
+			<td class="attributes"><code>
+				 public 
+				boolean
+				
+				</code>
+			</td>
+
+			<td class="name"><div>
+			<a class="anchor" href="#_match">#</a>
+			<code><a href="source-class-splitbrain.PHPArchive.FileInfo.html#318-338" title="Go to source code">match</a>( <span>string <var>$include</var> = <span class="php-quote">''</span></span>, <span>string <var>$exclude</var> = <span class="php-quote">''</span></span> )</code>
+
+			<div class="description short">
+				<p>Does the file match the given include and exclude expressions?</p>
+			</div>
+
+			<div class="description detailed hidden">
+				<p>Does the file match the given include and exclude expressions?</p>
+
+<p>Exclude rules take precedence over include rules</p>
+
+
+					<h4>Parameters</h4>
+					<div class="list"><dl>
+						<dt><var>$include</var></dt>
+						<dd>Regular expression of files to include</dd>
+						<dt><var>$exclude</var></dt>
+						<dd>Regular expression of files to exclude</dd>
+					</dl></div>
+
+					<h4>Returns</h4>
+					<div class="list">
+						boolean
+					</div>
+
+
+
+
+			</div>
+			</div></td>
+		</tr>
+			</table>
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+</div>
+	</div>
+
+	<div id="footer">
+		 API documentation generated by <a href="http://apigen.org">ApiGen</a>
+	</div>
+</div>
+<script src="resources/combined.js"></script>
+<script src="elementlist.js"></script>
+</body>
+</html>
