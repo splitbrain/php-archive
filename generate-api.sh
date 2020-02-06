@@ -26,7 +26,7 @@ if [ -z "$TRAVIS" ]; then
     DST='docs'
 else
     DST='../gh-pages'
-    if [ "$TRAVIS_PHP_VERSION"  != '5.6'     ]; then exit; fi
+    if [ "$TRAVIS_PHP_VERSION"  != '7.2'     ]; then exit; fi
     if [ "$TRAVIS_BRANCH"       != "$BRANCH" ]; then exit; fi
     if [ "$TRAVIS_PULL_REQUEST" != 'false'   ]; then exit; fi
     if [ -z "$GH_TOKEN"                      ]; then
