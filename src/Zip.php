@@ -76,7 +76,7 @@ class Zip extends Archive
         $result = array();
 
         foreach ($this->yieldContents() as $fileinfo) {
-            $result[] = $file;
+            $result[] = $fileinfo;
         }
 
         return $result;
