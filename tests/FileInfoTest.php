@@ -71,19 +71,28 @@ class FileInfoTest extends TestCase
         $this->assertEquals('baz/bang', $fileinfo->getPath());
     }
 
-    public function testMatch()
+    public function testMatchExpression()
     {
         $fileinfo = new FileInfo('foo/bar/baz/bang');
 
-        $this->assertTrue($fileinfo->match());
-        $this->assertTrue($fileinfo->match('/bang/'));
-        $this->assertFalse($fileinfo->match('/bark/'));
+        $this->assertTrue($fileinfo->matchExpression());
+        $this->assertTrue($fileinfo->matchExpression('/bang/'));
+        $this->assertFalse($fileinfo->matchExpression('/bark/'));
 
-        $this->assertFalse($fileinfo->match('', '/bang/'));
-        $this->assertTrue($fileinfo->match('', '/bark/'));
+        $this->assertFalse($fileinfo->matchExpression('', '/bang/'));
+        $this->assertTrue($fileinfo->matchExpression('', '/bark/'));
 
-        $this->assertFalse($fileinfo->match('/bang/', '/foo/'));
-        $this->assertTrue($fileinfo->match('/bang/', '/bark/'));
+        $this->assertFalse($fileinfo->matchExpression('/bang/', '/foo/'));
+        $this->assertTrue($fileinfo->matchExpression('/bang/', '/bark/'));
+    }
+
+    /**
+     * @expectedException \PHPUnit_Framework_Error_Notice
+     */
+    public function testMatchDeprecation()
+    {
+        $fileinfo = new FileInfo('foo/bar/baz/bang');
+        $fileinfo->match('/bang/', '/bark/');
     }
 
     public function testFromPath()

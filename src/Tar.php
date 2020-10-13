@@ -158,7 +158,7 @@ class Tar extends Archive
             $fileinfo->strip($strip);
 
             // skip unwanted files
-            if (!strlen($fileinfo->getPath()) || !$fileinfo->match($include, $exclude)) {
+            if (!strlen($fileinfo->getPath()) || !$fileinfo->matchExpression($include, $exclude)) {
                 $this->skipbytes(ceil($header['size'] / 512) * 512);
                 continue;
             }
