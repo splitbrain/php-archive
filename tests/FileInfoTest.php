@@ -86,11 +86,9 @@ class FileInfoTest extends TestCase
         $this->assertTrue($fileinfo->matchExpression('/bang/', '/bark/'));
     }
 
-    /**
-     * @expectedException \PHPUnit_Framework_Error_Notice
-     */
     public function testMatchDeprecation()
     {
+        $this->expectException(\PHPUnit\Framework\Error\Notice::class);
         $fileinfo = new FileInfo('foo/bar/baz/bang');
         $fileinfo->match('/bang/', '/bark/');
     }
@@ -108,11 +106,9 @@ class FileInfoTest extends TestCase
         $this->assertSame(0, $fileinfo->getSize());
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\FileInfoException
-     */
     public function testFromPathWithFileNotExisted()
     {
+        $this->expectException(\splitbrain\PHPArchive\FileInfoException::class);
         FileInfo::fromPath('invalid_file_path');
     }
 }

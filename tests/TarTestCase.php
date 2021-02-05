@@ -16,7 +16,7 @@ class TarTestCase extends TestCase
     protected $extensions = array('tar');
 
     /** @inheritdoc */
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         if (extension_loaded('zlib')) {
@@ -31,7 +31,7 @@ class TarTestCase extends TestCase
     }
 
     /** @inheritdoc */
-    protected function tearDown()
+    protected function tearDown() : void
     {
         parent::tearDown();
         $this->extensions[] = null;
@@ -62,11 +62,9 @@ class TarTestCase extends TestCase
         $this->assertTrue(function_exists('bzopen'));
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testTarFileIsNotExisted()
     {
+        $this->expectException(ArchiveIOException::class);
         $tar = new Tar();
         $tar->open('non_existed_file.tar');
     }
@@ -609,20 +607,16 @@ class TarTestCase extends TestCase
         }
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testContentsWithInvalidArchiveStream()
     {
+        $this->expectException(ArchiveIOException::class);
         $tar = new Tar();
         $tar->contents();
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testExtractWithInvalidOutDir()
     {
+        $this->expectException(ArchiveIOException::class);
         $dir = dirname(__FILE__) . '/tar';
         $out = '/root/invalid_out_dir';
 
@@ -632,11 +626,9 @@ class TarTestCase extends TestCase
         $tar->extract($out);
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testExtractWithArchiveStreamIsClosed()
     {
+        $this->expectException(ArchiveIOException::class);
         $dir = dirname(__FILE__) . '/tar';
         $out = '/root/invalid_out_dir';
 
@@ -647,11 +639,9 @@ class TarTestCase extends TestCase
         $tar->extract($out);
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testCreateWithInvalidFile()
     {
+        $this->expectException(ArchiveIOException::class);
         $dir = dirname(__FILE__) . '/tar';
         $tar = new Tar();
 
@@ -659,11 +649,9 @@ class TarTestCase extends TestCase
         $tar->create('/root/invalid_file');
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testAddFileWithArchiveStreamIsClosed()
     {
+        $this->expectException(ArchiveIOException::class);
         $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
 
         $tar = new Tar();
@@ -672,11 +660,9 @@ class TarTestCase extends TestCase
         $tar->addFile('archive_file', false);
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testAddFileWithInvalidFile()
     {
+        $this->expectException(ArchiveIOException::class);
         $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
 
         $tar = new Tar();
@@ -684,11 +670,9 @@ class TarTestCase extends TestCase
         $tar->addFile('archive_file', false);
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testAddDataWithArchiveStreamIsClosed()
     {
+        $this->expectException(ArchiveIOException::class);
         $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
 
         $tar = new Tar();
@@ -721,7 +705,7 @@ class TarTestCase extends TestCase
         $tar->addFile("$dir/zero.txt", 'zero.txt');
         $file = $tar->getArchive();
 
-        $this->assertInternalType('string', $file); // 1 header block + 2 footer blocks
+        $this->assertIsString($file); // 1 header block + 2 footer blocks
     }
 
     public function testSaveWithCompressionAuto()
@@ -736,11 +720,9 @@ class TarTestCase extends TestCase
         $this->assertTrue(true); // succeed if no exception, yet
     }
 
-    /**
-     * @expectedException \splitbrain\PHPArchive\ArchiveIOException
-     */
     public function testSaveWithInvalidDestinationFile()
     {
+        $this->expectException(ArchiveIOException::class);
         $dir = dirname(__FILE__) . '/tar';
         $tar = new Tar();
         $tar->setCompression();
