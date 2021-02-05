@@ -6,74 +6,35 @@
 
 	<title>File ArchiveIllegalCompressionException.php</title>
 
-	<link rel="stylesheet" href="resources/bootstrap.min.css?973e37a8502921d56bc02bb55321f45b072b6f71">
-	<link rel="stylesheet" href="resources/style.css?49f43d3208c5d7e33fa16d36107a345bf11cc00d">
+	<link rel="stylesheet" href="resources/style.css?c2f33731c1948fbed7c333554678bfa68d4817da">
 
 </head>
 
 <body>
-	<nav id="navigation" class="navbar navbar-default navbar-fixed-top">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a href="index.html" class="navbar-brand">Overview</a>
-			</div>
-			<div class="collapse navbar-collapse">
-
-                <form id="search" class="navbar-form navbar-left" role="search">
-                    <input type="hidden" name="cx" value="">
-                    <input type="hidden" name="ie" value="UTF-8">
-                    <div class="form-group">
-                        <input type="text" name="q" class="search-query form-control" placeholder="Search">
-					</div>
-				</form>
-
-				<ul class="nav navbar-nav">
-					<li>
-<span>Namespace</span>					</li>
-					<li>
-<span>Class</span>					</li>
-
-					<li class="divider-vertical"></li>
-
-					<li>
-						<a href="tree.html" title="Tree view of classes, interfaces, traits and exceptions"><span>Tree</span></a>
-					</li>
-
-						<li>
-							<a href="annotation-group-deprecated.html" title="List of elements with deprecated annotation">
-								<span>Deprecated</span>
-							</a>
-						</li>
-						<li>
-							<a href="annotation-group-todo.html" title="List of elements with todo annotation">
-								<span>Todo</span>
-							</a>
-						</li>
-
-
-				</ul>
-			</div>
-		</div>
-	</nav>
-
-	<div id="left">
+<div id="left">
 	<div id="menu">
+		<a href="index.html" title="Overview"><span>Overview</span></a>
+
 
 		<div id="groups">
 				<h3>Namespaces</h3>
 			<ul>
-					<li>
-						<a href="namespace-splitbrain.html">
-							splitbrain<span></span>
-						</a>
-							<ul>
-					<li>
-						<a href="namespace-splitbrain.PHPArchive.html">
-							PHPArchive						</a>
-							</li>
-								</ul></li>
+				<li>
+					<a href="namespace-splitbrain.html">
+						splitbrain<span></span>
+					</a>
+
+						<ul>
+				<li>
+					<a href="namespace-splitbrain.PHPArchive.html">
+						PHPArchive					</a>
+
+						</li>
+							</ul></li>
 			</ul>
 		</div>
+
+		<hr>
 
 
 		<div id="elements">
@@ -103,24 +64,47 @@
 <div id="splitter"></div>
 
 <div id="right">
-	<div id="rightInner">
-<pre id="source"><code><span id="1" class="l"><a href="#1"> 1 </a><span class="xlang">&lt;?php</span>
-</span><span id="2" class="l"><a href="#2"> 2 </a>
-</span><span id="3" class="l"><a href="#3"> 3 </a><span class="php-keyword1">namespace</span> splitbrain\PHPArchive;
-</span><span id="4" class="l"><a href="#4"> 4 </a>
-</span><span id="5" class="l"><a href="#5"> 5 </a><span class="php-comment">/**
-</span></span><span id="6" class="l"><a href="#6"> 6 </a><span class="php-comment"> * Bad or unsupported compression settings requested
-</span></span><span id="7" class="l"><a href="#7"> 7 </a><span class="php-comment"> */</span>
-</span><span id="8" class="l"><a href="#8"> 8 </a><span class="php-keyword1">class</span> ArchiveIllegalCompressionException <span class="php-keyword1">extends</span> \Exception
-</span><span id="9" class="l"><a href="#9"> 9 </a>{
-</span><span id="10" class="l"><a href="#10">10 </a>}</span></code></pre>
+<div id="rightInner">
+	<form id="search">
+		<input type="hidden" name="cx" value="">
+		<input type="hidden" name="ie" value="UTF-8">
+		<input type="text" name="q" class="text" placeholder="Search">
+	</form>
+
+	<div id="navigation">
+		<ul>
+			<li>
+				<a href="index.html" title="Overview"><span>Overview</span></a>
+			</li>
+			<li>
+<span>Namespace</span>			</li>
+			<li>
+<span>Class</span>			</li>
+		</ul>
+		<ul>
+		</ul>
+		<ul>
+		</ul>
 	</div>
+
+<pre class="numbers"><code><span class="l"><a href="#1"> 1: </a></span><span class="l"><a href="#2"> 2: </a></span><span class="l"><a href="#3"> 3: </a></span><span class="l"><a href="#4"> 4: </a></span><span class="l"><a href="#5"> 5: </a></span></span><span class="l"><a href="#6"> 6: </a></span></span><span class="l"><a href="#7"> 7: </a></span><span class="l"><a href="#8"> 8: </a></span><span class="l"><a href="#9"> 9: </a></span><span class="l"><a href="#10">10: </a></span></code></pre>
+<pre class="code"><code><span id="1" class="l"><span class="xlang">&lt;?php</span>
+</span><span id="2" class="l">
+</span><span id="3" class="l"><span class="php-keyword1">namespace</span> splitbrain\PHPArchive;
+</span><span id="4" class="l">
+</span><span id="5" class="l"><span class="php-comment">/**
+</span></span><span id="6" class="l"><span class="php-comment"> * Bad or unsupported compression settings requested
+</span></span><span id="7" class="l"><span class="php-comment"> */</span>
+</span><span id="8" class="l"><span class="php-keyword1">class</span> ArchiveIllegalCompressionException <span class="php-keyword1">extends</span> \Exception
+</span><span id="9" class="l">{
+</span><span id="10" class="l">}</span></code></pre>
 
 	<div id="footer">
 		 API documentation generated by <a href="http://apigen.org">ApiGen</a>
 	</div>
 </div>
-<script src="resources/combined.js?be84a76b6587140e2797865002e3f9737f6a5dab"></script>
+</div>
+<script src="resources/combined.js?58699d70ee1015ed63e509c64f4dd9d3b29ddbbe"></script>
 <script src="elementlist.js?d1556c44b5531910445709dcbedf0d7a38d1a058"></script>
 </body>
 </html>

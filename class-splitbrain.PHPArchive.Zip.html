@@ -5,75 +5,35 @@
 
 	<title>Class splitbrain\PHPArchive\Zip</title>
 
-	<link rel="stylesheet" href="resources/bootstrap.min.css?973e37a8502921d56bc02bb55321f45b072b6f71">
-	<link rel="stylesheet" href="resources/style.css?49f43d3208c5d7e33fa16d36107a345bf11cc00d">
+	<link rel="stylesheet" href="resources/style.css?c2f33731c1948fbed7c333554678bfa68d4817da">
 
 </head>
 
 <body>
-	<nav id="navigation" class="navbar navbar-default navbar-fixed-top">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a href="index.html" class="navbar-brand">Overview</a>
-			</div>
-			<div class="collapse navbar-collapse">
-
-                <form id="search" class="navbar-form navbar-left" role="search">
-                    <input type="hidden" name="cx" value="">
-                    <input type="hidden" name="ie" value="UTF-8">
-                    <div class="form-group">
-                        <input type="text" name="q" class="search-query form-control" placeholder="Search">
-					</div>
-				</form>
-
-				<ul class="nav navbar-nav">
-					<li>
-						<a href="namespace-splitbrain.PHPArchive.html" title="Summary of splitbrain\PHPArchive"><span>Namespace</span></a>
-					</li>
-					<li class="active">
-<span>Class</span>					</li>
-
-					<li class="divider-vertical"></li>
-
-					<li>
-						<a href="tree.html" title="Tree view of classes, interfaces, traits and exceptions"><span>Tree</span></a>
-					</li>
-
-						<li>
-							<a href="annotation-group-deprecated.html" title="List of elements with deprecated annotation">
-								<span>Deprecated</span>
-							</a>
-						</li>
-						<li>
-							<a href="annotation-group-todo.html" title="List of elements with todo annotation">
-								<span>Todo</span>
-							</a>
-						</li>
-
-
-				</ul>
-			</div>
-		</div>
-	</nav>
-
-	<div id="left">
+<div id="left">
 	<div id="menu">
+		<a href="index.html" title="Overview"><span>Overview</span></a>
+
 
 		<div id="groups">
 				<h3>Namespaces</h3>
 			<ul>
-					<li class="active">
-						<a href="namespace-splitbrain.html">
-							splitbrain<span></span>
-						</a>
-							<ul>
-					<li class="active">
-						<a href="namespace-splitbrain.PHPArchive.html">
-							PHPArchive						</a>
-							</li>
-								</ul></li>
+				<li class="active">
+					<a href="namespace-splitbrain.html">
+						splitbrain<span></span>
+					</a>
+
+						<ul>
+				<li class="active">
+					<a href="namespace-splitbrain.PHPArchive.html">
+						PHPArchive					</a>
+
+						</li>
+							</ul></li>
 			</ul>
 		</div>
+
+		<hr>
 
 
 		<div id="elements">
@@ -103,7 +63,30 @@
 <div id="splitter"></div>
 
 <div id="right">
-	<div id="rightInner">
+<div id="rightInner">
+	<form id="search">
+		<input type="hidden" name="cx" value="">
+		<input type="hidden" name="ie" value="UTF-8">
+		<input type="text" name="q" class="text" placeholder="Search">
+	</form>
+
+	<div id="navigation">
+		<ul>
+			<li>
+				<a href="index.html" title="Overview"><span>Overview</span></a>
+			</li>
+			<li>
+				<a href="namespace-splitbrain.PHPArchive.html" title="Summary of splitbrain\PHPArchive"><span>Namespace</span></a>
+			</li>
+			<li class="active">
+<span>Class</span>			</li>
+		</ul>
+		<ul>
+		</ul>
+		<ul>
+		</ul>
+	</div>
+
 <div id="content" class="class">
 	<h1>Class Zip</h1>
 
@@ -116,7 +99,7 @@
 <p>for specs see http://www.pkware.com/appnote</p>
 	</div>
 
-	<dl class="tree well">
+	<dl class="tree">
 		<dd style="padding-left:0px">
 			<a href="class-splitbrain.PHPArchive.Archive.html"><span>splitbrain\PHPArchive\Archive</span></a>
 			
@@ -138,7 +121,7 @@
 
 
 
-	<div class="alert alert-info">
+	<div class="info">
 		
 		
 		<b>Namespace:</b> <a href="namespace-splitbrain.html">splitbrain</a>\<a href="namespace-splitbrain.PHPArchive.html">PHPArchive</a><br>
@@ -154,28 +137,28 @@
 
 
 
-		<div class="panel panel-default">
-			<div class="panel-heading"><h2>Methods summary</h2></div>
-			<table class="summary table table-bordered table-striped methods" id="methods">
-		<tr data-order="setCompression" id="_setCompression">
+	<table class="summary methods" id="methods">
+	<caption>Methods summary</caption>
+	<tr data-order="setCompression" id="_setCompression">
 
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_setCompression">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#27-45" title="Go to source code">setCompression</a>( <span>integer <var>$level</var> = <span class="php-num">9</span></span>, <span>integer <var>$type</var> = <code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_AUTO">splitbrain\PHPArchive\Archive::<b>COMPRESS_AUTO</b></a></code></span> )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Set the compression level.</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_setCompression">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#27-45" title="Go to source code">setCompression</a>( <span>integer <var>$level</var> = <span class="php-num">9</span></span>, <span>integer <var>$type</var> = Archive::COMPRESS_AUTO</span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Set the compression level.</p>
+		<div class="description short">
+			<p>Set the compression level.</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Set the compression level.</p>
 
 <p>Compression Type is ignored for ZIP</p>
 
@@ -183,82 +166,84 @@
 for each file.</p>
 
 
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$level</var></dt>
-						<dd>Compression level (0 to 9)</dd>
-						<dt><var>$type</var></dt>
-						<dd>Type of compression to use ignored for ZIP</dd>
-					</dl></div>
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$level</var></dt>
+					<dd>Compression level (0 to 9)</dd>
+					<dt><var>$type</var></dt>
+					<dd>Type of compression to use ignored for ZIP</dd>
+				</dl></div>
 
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">splitbrain\PHPArchive\ArchiveIllegalCompressionException</a></code>
-					</div>
-
-
-
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="open" id="_open">
-
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
-
-			<td class="name"><div>
-			<a class="anchor" href="#_open">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#47-61" title="Go to source code">open</a>( <span>string <var>$file</var></span> )</code>
-
-			<div class="description short">
-				<p>Open an existing ZIP file for reading</p>
-			</div>
-
-			<div class="description detailed hidden">
-				<p>Open an existing ZIP file for reading</p>
-
-
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$file</var></dt>
-						<dd></dd>
-					</dl></div>
-
-
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIllegalCompressionException.html">splitbrain\PHPArchive\ArchiveIllegalCompressionException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="contents" id="_contents">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="open" id="_open">
 
-			<td class="attributes"><code>
-				 public 
-				<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_contents">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#63-93" title="Go to source code">contents</a>( )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Read the contents of a ZIP archive</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_open">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#47-61" title="Go to source code">open</a>( <span>string <var>$file</var></span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Read the contents of a ZIP archive</p>
+		<div class="description short">
+			<p>Open an existing ZIP file for reading</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Open an existing ZIP file for reading</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$file</var></dt>
+					<dd></dd>
+				</dl></div>
+
+
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="contents" id="_contents">
+
+		<td class="attributes"><code>
+			 public 
+
+			<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_contents">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#63-93" title="Go to source code">contents</a>( )</code>
+
+		<div class="description short">
+			<p>Read the contents of a ZIP archive</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Read the contents of a ZIP archive</p>
 
 <p>This function lists the files stored in the archive, and returns an indexed array of FileInfo objects</p>
 
@@ -267,40 +252,41 @@ Reopen the file with open() again if you want to do additional operations</p>
 
 
 
-					<h4>Returns</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
-					</div>
+				<h4>Returns</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+				</div>
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="extract" id="_extract">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="extract" id="_extract">
 
-			<td class="attributes"><code>
-				 public 
-				<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_extract">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#95-244" title="Go to source code">extract</a>( <span>string <var>$outdir</var></span>, <span>integer|string <var>$strip</var> = <span class="php-quote">''</span></span>, <span>string <var>$exclude</var> = <span class="php-quote">''</span></span>, <span>string <var>$include</var> = <span class="php-quote">''</span></span> )</code>
+			<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Extract an existing ZIP archive</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_extract">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#95-244" title="Go to source code">extract</a>( <span>string <var>$outdir</var></span>, <span>integer|string <var>$strip</var> = <span class="php-quote">''</span></span>, <span>string <var>$exclude</var> = <span class="php-quote">''</span></span>, <span>string <var>$include</var> = <span class="php-quote">''</span></span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Extract an existing ZIP archive</p>
+		<div class="description short">
+			<p>Extract an existing ZIP archive</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Extract an existing ZIP archive</p>
 
 <p>The $strip parameter allows you to strip a certain number of path components from the filenames
 found in the tar file, similar to the --strip-components feature of GNU tar. This is triggered when
@@ -315,173 +301,177 @@ expression will never be extracted. Both parameters can be used in combination. 
 stripped filenames as described above.</p>
 
 
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$outdir</var></dt>
-						<dd>the target directory for extracting</dd>
-						<dt><var>$strip</var></dt>
-						<dd>either the number of path components or a fixed prefix to strip</dd>
-						<dt><var>$exclude</var></dt>
-						<dd>a regular expression of files to exclude</dd>
-						<dt><var>$include</var></dt>
-						<dd>a regular expression of files to include</dd>
-					</dl></div>
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$outdir</var></dt>
+					<dd>the target directory for extracting</dd>
+					<dt><var>$strip</var></dt>
+					<dd>either the number of path components or a fixed prefix to strip</dd>
+					<dt><var>$exclude</var></dt>
+					<dd>a regular expression of files to exclude</dd>
+					<dt><var>$include</var></dt>
+					<dd>a regular expression of files to include</dd>
+				</dl></div>
 
-					<h4>Returns</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
-					</div>
+				<h4>Returns</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a>[]</code>
+				</div>
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="create" id="_create">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="create" id="_create">
 
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_create">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#246-270" title="Go to source code">create</a>( <span>string <var>$file</var> = <span class="php-quote">''</span></span> )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Create a new ZIP file</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_create">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#246-270" title="Go to source code">create</a>( <span>string <var>$file</var> = <span class="php-quote">''</span></span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Create a new ZIP file</p>
+		<div class="description short">
+			<p>Create a new ZIP file</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Create a new ZIP file</p>
 
 <p>If $file is empty, the zip file will be created in memory</p>
 
 
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$file</var></dt>
-						<dd></dd>
-					</dl></div>
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$file</var></dt>
+					<dd></dd>
+				</dl></div>
 
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
-
-
-
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="addFile" id="_addFile">
-
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
-
-			<td class="name"><div>
-			<a class="anchor" href="#_addFile">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#280-305" title="Go to source code">addFile</a>( <span>string <var>$file</var></span>, <span>string|<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code> <var>$fileinfo</var> = <span class="php-quote">''</span></span> )</code>
-
-			<div class="description short">
-				<p>Add a file to the current archive using an existing file in the filesystem</p>
-			</div>
-
-			<div class="description detailed hidden">
-				<p>Add a file to the current archive using an existing file in the filesystem</p>
-
-
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$file</var></dt>
-						<dd>path to the original file</dd>
-						<dt><var>$fileinfo</var></dt>
-						<dd>either the name to use in archive (string) or a FileInfo oject with all meta data, empty to take from original</dd>
-					</dl></div>
-
-
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
-						<code><a href="class-splitbrain.PHPArchive.FileInfoException.html">splitbrain\PHPArchive\FileInfoException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="addData" id="_addData">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="addFile" id="_addFile">
 
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_addData">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#307-367" title="Go to source code">addData</a>( <span>string|<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code> <var>$fileinfo</var></span>, <span>string <var>$data</var></span> )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Add a file to the current Zip archive using the given $data as content</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_addFile">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#280-305" title="Go to source code">addFile</a>( <span>string <var>$file</var></span>, <span>string|<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code> <var>$fileinfo</var> = <span class="php-quote">''</span></span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Add a file to the current Zip archive using the given $data as content</p>
+		<div class="description short">
+			<p>Add a file to the current archive using an existing file in the filesystem</p>
+		</div>
 
-
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$fileinfo</var></dt>
-						<dd>either the name to us in archive (string) or a FileInfo oject with all meta data</dd>
-						<dt><var>$data</var></dt>
-						<dd>binary content of the file to add</dd>
-					</dl></div>
+		<div class="description detailed hidden">
+			<p>Add a file to the current archive using an existing file in the filesystem</p>
 
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$file</var></dt>
+					<dd>path to the original file</dd>
+					<dt><var>$fileinfo</var></dt>
+					<dd>either the name to use in archive (string) or a FileInfo oject with all meta data, empty to take from original</dd>
+				</dl></div>
+
+
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code><br>
+					<code><a href="class-splitbrain.PHPArchive.FileInfoException.html">splitbrain\PHPArchive\FileInfoException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="close" id="_close">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="addData" id="_addData">
 
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_close">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#369-412" title="Go to source code">close</a>( )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Add the closing footer to the archive if in write mode, close all file handles</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_addData">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#307-367" title="Go to source code">addData</a>( <span>string|<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code> <var>$fileinfo</var></span>, <span>string <var>$data</var></span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Add the closing footer to the archive if in write mode, close all file handles</p>
+		<div class="description short">
+			<p>Add a file to the current Zip archive using the given $data as content</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Add a file to the current Zip archive using the given $data as content</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$fileinfo</var></dt>
+					<dd>either the name to us in archive (string) or a FileInfo oject with all meta data</dd>
+					<dt><var>$data</var></dt>
+					<dd>binary content of the file to add</dd>
+				</dl></div>
+
+
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="close" id="_close">
+
+		<td class="attributes"><code>
+			 public 
+
+			
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_close">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#369-412" title="Go to source code">close</a>( )</code>
+
+		<div class="description short">
+			<p>Add the closing footer to the archive if in write mode, close all file handles</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Add the closing footer to the archive if in write mode, close all file handles</p>
 
 <p>After a call to this function no more data can be added to the archive, for
 read access no reading is allowed anymore</p>
@@ -489,132 +479,909 @@ read access no reading is allowed anymore</p>
 
 
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="getArchive" id="_getArchive">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="getArchive" id="_getArchive">
 
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_getArchive">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#414-425" title="Go to source code">getArchive</a>( )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Returns the created in-memory archive data</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_getArchive">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#414-425" title="Go to source code">getArchive</a>( )</code>
 
-			<div class="description detailed hidden">
-				<p>Returns the created in-memory archive data</p>
+		<div class="description short">
+			<p>Returns the created in-memory archive data</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Returns the created in-memory archive data</p>
 
 <p>This implicitly calls close() on the Archive</p>
 
 
 
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
 
 
 
-			</div>
-			</div></td>
-		</tr>
-		<tr data-order="save" id="_save">
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="save" id="_save">
 
-			<td class="attributes"><code>
-				 public 
-				
-				
-				</code>
-			</td>
+		<td class="attributes"><code>
+			 public 
 
-			<td class="name"><div>
-			<a class="anchor" href="#_save">#</a>
-			<code><a href="source-class-splitbrain.PHPArchive.Zip.html#427-441" title="Go to source code">save</a>( <span> <var>$file</var></span> )</code>
+			
+			
+			</code>
+		</td>
 
-			<div class="description short">
-				<p>Save the created in-memory archive data</p>
-			</div>
+		<td class="name"><div>
+		<a class="anchor" href="#_save">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#427-441" title="Go to source code">save</a>( <span> <var>$file</var></span> )</code>
 
-			<div class="description detailed hidden">
-				<p>Save the created in-memory archive data</p>
+		<div class="description short">
+			<p>Save the created in-memory archive data</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Save the created in-memory archive data</p>
 
 <p>Note: It's more memory effective to specify the filename in the create() function and
 let the library work on the new file directly.</p>
 
 
-					<h4>Parameters</h4>
-					<div class="list"><dl>
-						<dt><var>$file</var></dt>
-						<dd></dd>
-					</dl></div>
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$file</var></dt>
+					<dd></dd>
+				</dl></div>
 
 
-					<h4>Throws</h4>
-					<div class="list">
-						<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
-					</div>
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
 
 
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="readCentralDir" id="_readCentralDir">
+
+		<td class="attributes"><code>
+			 protected 
+
+			array
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_readCentralDir">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#443-489" title="Go to source code">readCentralDir</a>( )</code>
+
+		<div class="description short">
+			<p>Read the central directory</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Read the central directory</p>
+
+<p>This key-value list contains general information about the ZIP file</p>
+
+
+
+				<h4>Returns</h4>
+				<div class="list">
+					array
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="readCentralFileHeader" id="_readCentralFileHeader">
+
+		<td class="attributes"><code>
+			 protected 
+
+			array
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_readCentralFileHeader">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#491-535" title="Go to source code">readCentralFileHeader</a>( )</code>
+
+		<div class="description short">
+			<p>Read the next central file header</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Read the next central file header</p>
+
+<p>Assumes the current file pointer is pointing at the right position</p>
+
+
+
+				<h4>Returns</h4>
+				<div class="list">
+					array
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="readFileHeader" id="_readFileHeader">
+
+		<td class="attributes"><code>
+			 protected 
+
+			array
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_readFileHeader">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#537-580" title="Go to source code">readFileHeader</a>( <span>array <var>$header</var></span> )</code>
+
+		<div class="description short">
+			<p>Reads the local file header</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Reads the local file header</p>
+
+<p>This header precedes each individual file inside the zip file. Assumes the current file pointer is pointing at
+the right position already. Enhances the given central header with the data found at the local header.</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$header</var></dt>
+					<dd>the central file header read previously (see above)</dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					array
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="parseExtra" id="_parseExtra">
+
+		<td class="attributes"><code>
+			 protected 
+
+			array
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_parseExtra">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#582-609" title="Go to source code">parseExtra</a>( <span>string <var>$header</var></span> )</code>
+
+		<div class="description short">
+			<p>Parse the extra headers into fields</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Parse the extra headers into fields</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$header</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					array
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="header2fileinfo" id="_header2fileinfo">
+
+		<td class="attributes"><code>
+			 protected 
+
+			<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code>
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_header2fileinfo">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#611-639" title="Go to source code">header2fileinfo</a>( <span> <var>$header</var></span> )</code>
+
+		<div class="description short">
+			<p>Create fileinfo object from header data</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Create fileinfo object from header data</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$header</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.FileInfo.html">splitbrain\PHPArchive\FileInfo</a></code>
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="cpToUtf8" id="_cpToUtf8">
+
+		<td class="attributes"><code>
+			 protected 
+
+			string
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_cpToUtf8">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#641-662" title="Go to source code">cpToUtf8</a>( <span> <var>$string</var></span> )</code>
+
+		<div class="description short">
+			<p>Convert the given CP437 encoded string to UTF-8</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Convert the given CP437 encoded string to UTF-8</p>
+
+<p>Tries iconv with the correct encoding first, falls back to mbstring with CP850 which is
+similar enough. CP437 seems not to be available in mbstring. Lastly falls back to keeping the
+string as is, which is still better than nothing.</p>
+
+<p>On some systems iconv is available, but the codepage is not. We also check for that.</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$string</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					string
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="utf8ToCp" id="_utf8ToCp">
+
+		<td class="attributes"><code>
+			 protected 
+
+			string
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_utf8ToCp">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#664-688" title="Go to source code">utf8ToCp</a>( <span> <var>$string</var></span> )</code>
+
+		<div class="description short">
+			<p>Convert the given UTF-8 encoded string to CP437</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Convert the given UTF-8 encoded string to CP437</p>
+
+<p>Same caveats as for cpToUtf8() apply</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$string</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					string
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="writebytes" id="_writebytes">
+
+		<td class="attributes"><code>
+			 protected 
+
+			integer
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_writebytes">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#691-710" title="Go to source code">writebytes</a>( <span>string <var>$data</var></span> )</code>
+
+		<div class="description short">
+			<p>Write to the open filepointer or memory</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Write to the open filepointer or memory</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$data</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					integer<br>number of bytes written
+				</div>
+
+				<h4>Throws</h4>
+				<div class="list">
+					<code><a href="class-splitbrain.PHPArchive.ArchiveIOException.html">splitbrain\PHPArchive\ArchiveIOException</a></code>
+				</div>
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="dataOffset" id="_dataOffset">
+
+		<td class="attributes"><code>
+			 protected 
+
+			integer
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_dataOffset">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#712-725" title="Go to source code">dataOffset</a>( )</code>
+
+		<div class="description short">
+			<p>Current data pointer position</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Current data pointer position</p>
+
+
+
+				<h4>Returns</h4>
+				<div class="list">
+					integer
+				</div>
+
+
+				<h4>Fixme</h4>
+				<div class="list">
+						might need a -1<br>
+				</div>
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="makeDosTime" id="_makeDosTime">
+
+		<td class="attributes"><code>
+			 protected 
+
+			integer
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_makeDosTime">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#727-752" title="Go to source code">makeDosTime</a>( <span> <var>$time</var></span> )</code>
+
+		<div class="description short">
+			<p>Create a DOS timestamp from a UNIX timestamp</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Create a DOS timestamp from a UNIX timestamp</p>
+
+<p>DOS timestamps start at 1980-01-01, earlier UNIX stamps will be set to this date</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$time</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					integer
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="makeUnixTime" id="_makeUnixTime">
+
+		<td class="attributes"><code>
+			 protected 
+
+			integer
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_makeUnixTime">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#754-778" title="Go to source code">makeUnixTime</a>( <span> <var>$mdate</var> = <span class="php-keyword1">null</span></span>, <span> <var>$mtime</var> = <span class="php-keyword1">null</span></span> )</code>
+
+		<div class="description short">
+			<p>Create a UNIX timestamp from a DOS timestamp</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Create a UNIX timestamp from a DOS timestamp</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$mdate</var></dt>
+					<dd></dd>
+					<dt><var>$mtime</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					integer
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="makeCentralFileRecord" id="_makeCentralFileRecord">
+
+		<td class="attributes"><code>
+			 protected 
+
+			string
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_makeCentralFileRecord">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#780-826" title="Go to source code">makeCentralFileRecord</a>( <span>integer <var>$offset</var></span>, <span>integer <var>$ts</var></span>, <span>integer <var>$crc</var></span>, <span>integer <var>$len</var></span>, <span>integer <var>$clen</var></span>, <span>string <var>$name</var></span>, <span>boolean|null <var>$comp</var> = <span class="php-keyword1">null</span></span> )</code>
+
+		<div class="description short">
+			<p>Returns a local file header for the given data</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Returns a local file header for the given data</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$offset</var></dt>
+					<dd>location of the local header</dd>
+					<dt><var>$ts</var></dt>
+					<dd>unix timestamp</dd>
+					<dt><var>$crc</var></dt>
+					<dd>CRC32 checksum of the uncompressed data</dd>
+					<dt><var>$len</var></dt>
+					<dd>length of the uncompressed data</dd>
+					<dt><var>$clen</var></dt>
+					<dd>length of the compressed data</dd>
+					<dt><var>$name</var></dt>
+					<dd>file name</dd>
+					<dt><var>$comp</var></dt>
+					<dd>if compression is used, if null it's determined from $len != $clen</dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					string
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="makeLocalFileHeader" id="_makeLocalFileHeader">
+
+		<td class="attributes"><code>
+			 protected 
+
+			string
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_makeLocalFileHeader">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#828-866" title="Go to source code">makeLocalFileHeader</a>( <span>integer <var>$ts</var></span>, <span>integer <var>$crc</var></span>, <span>integer <var>$len</var></span>, <span>integer <var>$clen</var></span>, <span>string <var>$name</var></span>, <span>boolean|null <var>$comp</var> = <span class="php-keyword1">null</span></span> )</code>
+
+		<div class="description short">
+			<p>Returns a local file header for the given data</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Returns a local file header for the given data</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$ts</var></dt>
+					<dd>unix timestamp</dd>
+					<dt><var>$crc</var></dt>
+					<dd>CRC32 checksum of the uncompressed data</dd>
+					<dt><var>$len</var></dt>
+					<dd>length of the uncompressed data</dd>
+					<dt><var>$clen</var></dt>
+					<dd>length of the compressed data</dd>
+					<dt><var>$name</var></dt>
+					<dd>file name</dd>
+					<dt><var>$comp</var></dt>
+					<dd>if compression is used, if null it's determined from $len != $clen</dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					string
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	<tr data-order="encodeFilename" id="_encodeFilename">
+
+		<td class="attributes"><code>
+			 protected 
+
+			array($filename,
+			
+			</code>
+		</td>
+
+		<td class="name"><div>
+		<a class="anchor" href="#_encodeFilename">#</a>
+		<code><a href="source-class-splitbrain.PHPArchive.Zip.html#868-894" title="Go to source code">encodeFilename</a>( <span> <var>$original</var></span> )</code>
+
+		<div class="description short">
+			<p>Returns an allowed filename and an extra field header</p>
+		</div>
+
+		<div class="description detailed hidden">
+			<p>Returns an allowed filename and an extra field header</p>
+
+<p>When encoding stuff outside the 7bit ASCII range it needs to be placed in a separate
+extra field</p>
+
+
+				<h4>Parameters</h4>
+				<div class="list"><dl>
+					<dt><var>$original</var></dt>
+					<dd></dd>
+				</dl></div>
+
+				<h4>Returns</h4>
+				<div class="list">
+					array($filename,<br>$filename, $extra)
+				</div>
+
+
+
+
+		</div>
+		</div></td>
+	</tr>
+	</table>
+
+	<table class="summary inherited">
+	<caption>Methods inherited from <a href="class-splitbrain.PHPArchive.Archive.html#methods">splitbrain\PHPArchive\Archive</a></caption>
+	<tr>
+		<td><code>
+			<a href="class-splitbrain.PHPArchive.Archive.html#_setCallback">setCallback()</a>
+		</code></td>
+	</tr>
+	</table>
+
+
+
+
+
+
+
+
+	<table class="summary inherited">
+	<caption>Constants inherited from <a href="class-splitbrain.PHPArchive.Archive.html#constants">splitbrain\PHPArchive\Archive</a></caption>
+	<tr>
+		<td><code>
+			<a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_AUTO"><b>COMPRESS_AUTO</b></a>, 
+			<a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_BZIP"><b>COMPRESS_BZIP</b></a>, 
+			<a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_GZIP"><b>COMPRESS_GZIP</b></a>, 
+			<a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_NONE"><b>COMPRESS_NONE</b></a>
+		</code></td>
+	</tr>
+	</table>
+
+
+
+	<table class="summary properties" id="properties">
+	<caption>Properties summary</caption>
+	<tr data-order="file" id="$file">
+		<td class="attributes"><code>
+			protected  
+			string
+		</code></td>
+
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#19" title="Go to source code"><var>$file</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
 
 			</div>
-			</div></td>
-		</tr>
-			</table>
-		</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$file" class="anchor">#</a>
+				<code><span class="php-quote">''</span></code>
+			</div>
+		</td>
+	</tr>
+	<tr data-order="fh" id="$fh">
+		<td class="attributes"><code>
+			protected  
+			
+		</code></td>
 
-		<div class="panel panel-default">
-	        <div class="panel-heading"><h3>Methods inherited from <a href="class-splitbrain.PHPArchive.Archive.html#methods">splitbrain\PHPArchive\Archive</a></h3></div>
-			<p class="elementList">
-				<code><a href="class-splitbrain.PHPArchive.Archive.html#_setCallback">setCallback()</a></code>
-			</p>
-		</div>
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#20" title="Go to source code"><var>$fh</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+			</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$fh" class="anchor">#</a>
+				<code></code>
+			</div>
+		</td>
+	</tr>
+	<tr data-order="memory" id="$memory">
+		<td class="attributes"><code>
+			protected  
+			string
+		</code></td>
+
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#21" title="Go to source code"><var>$memory</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+			</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$memory" class="anchor">#</a>
+				<code><span class="php-quote">''</span></code>
+			</div>
+		</td>
+	</tr>
+	<tr data-order="closed" id="$closed">
+		<td class="attributes"><code>
+			protected  
+			boolean
+		</code></td>
+
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#22" title="Go to source code"><var>$closed</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+			</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$closed" class="anchor">#</a>
+				<code><span class="php-keyword1">true</span></code>
+			</div>
+		</td>
+	</tr>
+	<tr data-order="writeaccess" id="$writeaccess">
+		<td class="attributes"><code>
+			protected  
+			boolean
+		</code></td>
+
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#23" title="Go to source code"><var>$writeaccess</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+			</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$writeaccess" class="anchor">#</a>
+				<code><span class="php-keyword1">false</span></code>
+			</div>
+		</td>
+	</tr>
+	<tr data-order="ctrl_dir" id="$ctrl_dir">
+		<td class="attributes"><code>
+			protected  
+			
+		</code></td>
+
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#24" title="Go to source code"><var>$ctrl_dir</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+			</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$ctrl_dir" class="anchor">#</a>
+				<code></code>
+			</div>
+		</td>
+	</tr>
+	<tr data-order="complevel" id="$complevel">
+		<td class="attributes"><code>
+			protected  
+			integer
+		</code></td>
+
+		<td class="name">
+				<a href="source-class-splitbrain.PHPArchive.Zip.html#25" title="Go to source code"><var>$complevel</var></a>
+
+			<div class="description short">
+				
+			</div>
+
+			<div class="description detailed hidden">
+				
+
+			</div>
+		</td>
+		<td class="value">
+			<div>
+				<a href="#$complevel" class="anchor">#</a>
+				<code><span class="php-num">9</span></code>
+			</div>
+		</td>
+	</tr>
+	</table>
+
+	<table class="summary inherited">
+	<caption>Properties inherited from <a href="class-splitbrain.PHPArchive.Archive.html#properties">splitbrain\PHPArchive\Archive</a></caption>
+	<tr>
+		<td><code>
+			<a href="class-splitbrain.PHPArchive.Archive.html#$callback"><var>$callback</var></a>
+		</code></td>
+	</tr>
+	</table>
 
 
-
-
-
-
-
-		<div class="panel panel-default">
-            <div class="panel-heading"><h2>Constants summary</h2></div>
-		</div>
-
-		<div class="panel panel-default">
-            <div class="panel-heading"><h3>Constants inherited from <a href="class-splitbrain.PHPArchive.Archive.html#constants">splitbrain\PHPArchive\Archive</a></h3></div>
-			<p class="elementList">
-				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_AUTO"><b>COMPRESS_AUTO</b></a></code>, 
-				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_BZIP"><b>COMPRESS_BZIP</b></a></code>, 
-				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_GZIP"><b>COMPRESS_GZIP</b></a></code>, 
-				<code><a href="class-splitbrain.PHPArchive.Archive.html#COMPRESS_NONE"><b>COMPRESS_NONE</b></a></code>
-			</p>
-		</div>
 
 
 
 </div>
-	</div>
 
 	<div id="footer">
 		 API documentation generated by <a href="http://apigen.org">ApiGen</a>
 	</div>
 </div>
-<script src="resources/combined.js"></script>
-<script src="elementlist.js"></script>
+</div>
+<script src="resources/combined.js?58699d70ee1015ed63e509c64f4dd9d3b29ddbbe"></script>
+<script src="elementlist.js?d1556c44b5531910445709dcbedf0d7a38d1a058"></script>
 </body>
 </html>
