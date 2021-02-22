@@ -51,7 +51,7 @@ class ZipTestCase extends TestCase
     {
         $zip = new Zip();
 
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $tdir = ltrim($dir, '/');
 
         $zip->create();
@@ -91,7 +91,7 @@ class ZipTestCase extends TestCase
     {
         $zip = new Zip();
 
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $tdir = ltrim($dir, '/');
         $tmp = vfsStream::url('home_root_path/test.zip');
 
@@ -135,7 +135,7 @@ class ZipTestCase extends TestCase
     {
         $this->expectException(ArchiveIOException::class);
         $zip = new Zip();
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $zip->setCompression(0);
         $zip->close();
         $zip->addFile("$dir/testdata1.txt", "$dir/testdata1.txt");
@@ -158,7 +158,7 @@ class ZipTestCase extends TestCase
      */
     public function testZipContent()
     {
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
 
         $zip = new Zip();
         $file = "$dir/test.zip";
@@ -177,7 +177,7 @@ class ZipTestCase extends TestCase
     public function testZipContentWithArchiveStreamIsClosed()
     {
         $this->expectException(ArchiveIOException::class);
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $zip = new Zip();
         $file = "$dir/test.zip";
         $zip->open($file);
@@ -191,7 +191,7 @@ class ZipTestCase extends TestCase
      */
     public function testDogFood()
     {
-        $input = glob(dirname(__FILE__) . '/../src/*');
+        $input = glob(__DIR__ . '/../src/*');
         $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
         $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
 
@@ -312,7 +312,7 @@ class ZipTestCase extends TestCase
 
     public function testSaveArchiveFile()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $zip = new zip();
         $zip->setCompression(-1);
         $zip->create();
@@ -382,7 +382,7 @@ class ZipTestCase extends TestCase
      */
     public function testZipExtract()
     {
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
 
         $zip = new Zip();
@@ -409,7 +409,7 @@ class ZipTestCase extends TestCase
     public function testZipExtractWithArchiveStreamIsClosed()
     {
         $this->expectException(ArchiveIOException::class);
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
 
         $zip = new Zip();
@@ -426,7 +426,7 @@ class ZipTestCase extends TestCase
      */
     public function testCompStripExtract()
     {
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
 
         $zip = new Zip();
@@ -452,7 +452,7 @@ class ZipTestCase extends TestCase
      */
     public function testPrefixStripExtract()
     {
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
 
         $zip = new Zip();
@@ -478,7 +478,7 @@ class ZipTestCase extends TestCase
      */
     public function testIncludeExtract()
     {
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
 
         $zip = new Zip();
@@ -503,7 +503,7 @@ class ZipTestCase extends TestCase
      */
     public function testExcludeExtract()
     {
-        $dir = dirname(__FILE__) . '/zip';
+        $dir = __DIR__ . '/zip';
         $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
 
         $zip = new Zip();

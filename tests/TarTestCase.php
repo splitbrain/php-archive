@@ -79,7 +79,7 @@ class TarTestCase extends TestCase
     {
         $tar = new Tar();
 
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tdir = ltrim($dir, '/');
 
         $tar->create();
@@ -117,7 +117,7 @@ class TarTestCase extends TestCase
     {
         $tar = new Tar();
 
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tdir = ltrim($dir, '/');
         $tmp = vfsStream::url('home_root_path/test.tar');
 
@@ -153,7 +153,7 @@ class TarTestCase extends TestCase
      */
     public function testTarcontent()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
 
         foreach ($this->extensions as $ext) {
             $tar = new Tar();
@@ -178,7 +178,7 @@ class TarTestCase extends TestCase
     public function testDogfood()
     {
         foreach ($this->extensions as $ext) {
-            $input = glob(dirname(__FILE__) . '/../src/*');
+            $input = glob(__DIR__ . '/../src/*');
             $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
             $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
 
@@ -250,7 +250,7 @@ class TarTestCase extends TestCase
      */
     public function testTarExtract()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
@@ -277,7 +277,7 @@ class TarTestCase extends TestCase
      */
     public function testCompStripExtract()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
@@ -304,7 +304,7 @@ class TarTestCase extends TestCase
      */
     public function testPrefixStripExtract()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
@@ -331,7 +331,7 @@ class TarTestCase extends TestCase
      */
     public function testIncludeExtract()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
@@ -357,7 +357,7 @@ class TarTestCase extends TestCase
      */
     public function testExcludeExtract()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
 
         foreach ($this->extensions as $ext) {
@@ -394,7 +394,7 @@ class TarTestCase extends TestCase
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype('foo.tar.BZ2'));
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype('foo.tar.bz2'));
 
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $this->assertEquals(Tar::COMPRESS_NONE, $tar->filetype("$dir/test.tar"));
         $this->assertEquals(Tar::COMPRESS_GZIP, $tar->filetype("$dir/test.tgz"));
         $this->assertEquals(Tar::COMPRESS_BZIP, $tar->filetype("$dir/test.tbz"));
@@ -408,7 +408,7 @@ class TarTestCase extends TestCase
      */
     public function testLongPathExtract()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
 
         foreach (array('ustar', 'gnu') as $format) {
@@ -504,7 +504,7 @@ class TarTestCase extends TestCase
      */
     public function testTarBomb()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
 
         $tar = new Tar();
@@ -524,7 +524,7 @@ class TarTestCase extends TestCase
      */
     public function testZeroFile()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tar = new Tar();
         $tar->setCompression(0);
         $tar->create();
@@ -582,7 +582,7 @@ class TarTestCase extends TestCase
      */
     public function testBlockFile()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tar = new Tar();
         $tar->setCompression(0);
         $tar->create();
@@ -609,7 +609,7 @@ class TarTestCase extends TestCase
     public function testGzipIsValid()
     {
         foreach (['tgz', 'tar.gz'] as $ext) {
-            $input = glob(dirname(__FILE__) . '/../src/*');
+            $input = glob(__DIR__ . '/../src/*');
             $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.' . $ext;
             $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
 
@@ -649,7 +649,7 @@ class TarTestCase extends TestCase
     public function testExtractWithInvalidOutDir()
     {
         $this->expectException(ArchiveIOException::class);
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = '/root/invalid_out_dir';
 
         $tar = new Tar();
@@ -661,7 +661,7 @@ class TarTestCase extends TestCase
     public function testExtractWithArchiveStreamIsClosed()
     {
         $this->expectException(ArchiveIOException::class);
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $out = '/root/invalid_out_dir';
 
         $tar = new Tar();
@@ -674,7 +674,7 @@ class TarTestCase extends TestCase
     public function testCreateWithInvalidFile()
     {
         $this->expectException(ArchiveIOException::class);
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tar = new Tar();
 
         $tar->open("$dir/tarbomb.tgz");
@@ -730,7 +730,7 @@ class TarTestCase extends TestCase
      */
     public function testGetArchiveWithBzipCompress()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tar = new Tar();
         $tar->setCompression(9, Tar::COMPRESS_BZIP);
         $tar->create();
@@ -742,7 +742,7 @@ class TarTestCase extends TestCase
 
     public function testSaveWithCompressionAuto()
     {
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tar = new Tar();
         $tar->setCompression(-1);
         $tar->create();
@@ -755,7 +755,7 @@ class TarTestCase extends TestCase
     public function testSaveWithInvalidDestinationFile()
     {
         $this->expectException(ArchiveIOException::class);
-        $dir = dirname(__FILE__) . '/tar';
+        $dir = __DIR__ . '/tar';
         $tar = new Tar();
         $tar->setCompression();
         $tar->create();
