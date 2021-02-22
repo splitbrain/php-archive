@@ -546,6 +546,38 @@ class TarTestCase extends TestCase
     }
 
     /**
+     * Add a zero byte file to a tar and extract it again
+     */
+    public function testZeroByteFile() {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+
+        $tar = new Tar();
+        $tar->create($archive);
+        $tar->addFile(__DIR__ . '/zip/zero.txt', 'foo/zero.txt');
+        $tar->close();
+        $this->assertFileExists($archive);
+
+        $tar = new Tar();
+        $tar->open($archive);
+        $contents = $tar->contents();
+
+        $this->assertEquals(1, count($contents));
+        $this->assertEquals('foo/zero.txt', ($contents[0])->getPath());
+
+        $tar = new Tar();
+        $tar->open($archive);
+        $tar->extract($extract);
+        $tar->close();
+
+        $this->assertFileExists("$extract/foo/zero.txt");
+        $this->assertEquals(0, filesize("$extract/foo/zero.txt"));
+
+        self::RDelete($extract);
+        unlink($archive);
+    }
+
+    /**
      * A file of exactly one block should be just a header block + data block + the footer
      */
     public function testBlockFile()

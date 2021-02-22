@@ -227,6 +227,38 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Add a zero byte file to a zip and extract it again
+     */
+    public function testZeroByteFile() {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->addFile(__DIR__ . '/zip/zero.txt', 'foo/zero.txt');
+        $zip->close();
+        $this->assertFileExists($archive);
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $contents = $zip->contents();
+
+        $this->assertEquals(1, count($contents));
+        $this->assertEquals('foo/zero.txt', ($contents[0])->getPath());
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($extract);
+        $zip->close();
+
+        $this->assertFileExists("$extract/foo/zero.txt");
+        $this->assertEquals(0, filesize("$extract/foo/zero.txt"));
+
+        self::RDelete($extract);
+        unlink($archive);
+    }
+
+    /**
      * @depends testExtZipIsInstalled
      */
     public function testUtf8()
