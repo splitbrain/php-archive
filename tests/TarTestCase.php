@@ -662,12 +662,12 @@ class TarTestCase extends TestCase
 
     public function testAddFileWithInvalidFile()
     {
-        $this->expectException(ArchiveIOException::class);
+        $this->expectException(FileInfoException::class);
         $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
 
         $tar = new Tar();
         $tar->create($archive);
-        $tar->addFile('archive_file', false);
+        $tar->addFile('archive_file', 'a-non-existing-file.txt');
     }
 
     public function testAddDataWithArchiveStreamIsClosed()
