@@ -166,7 +166,9 @@ class Tar extends Archive
             // create output directory
             $output    = $outdir.'/'.$fileinfo->getPath();
             $directory = ($fileinfo->getIsdir()) ? $output : dirname($output);
-            @mkdir($directory, 0777, true);
+            if (!file_exists($directory)) {
+                mkdir($directory, 0777, true);
+            }
 
             // extract data
             if (!$fileinfo->getIsdir()) {
