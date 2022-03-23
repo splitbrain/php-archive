@@ -15,6 +15,7 @@ namespace splitbrain\PHPArchive;
  */
 class Zip extends Archive
 {
+    const LOCAL_FILE_HEADER_CRC_OFFSET = 14;
 
     protected $file = '';
     protected $fh;
@@ -922,8 +923,6 @@ class Zip extends Archive
 
         return $header;
     }
-
-    const LOCAL_FILE_HEADER_CRC_OFFSET = 14;
 
     /**
      * Returns a local file header for the given data
