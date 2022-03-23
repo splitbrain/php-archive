@@ -74,11 +74,28 @@ class Zip extends Archive
      */
     public function contents()
     {
+        $result = array();
+
+        foreach ($this->yieldContents() as $fileinfo) {
+            $result[] = $fileinfo;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Read the contents of a ZIP archive and return each entry using yield
+     * for memory efficiency.
+     *
+     * @see contents()
+     * @throws ArchiveIOException
+     * @return FileInfo[]
+     */
+    public function yieldContents()
+    {
         if ($this->closed || !$this->file) {
             throw new ArchiveIOException('Can not read from a closed archive');
         }
-
-        $result = array();
 
         $centd = $this->readCentralDir();
 
@@ -86,11 +103,10 @@ class Zip extends Archive
         @fseek($this->fh, $centd['offset']);
 
         for ($i = 0; $i < $centd['entries']; $i++) {
-            $result[] = $this->header2fileinfo($this->readCentralFileHeader());
+            yield $this->header2fileinfo($this->readCentralFileHeader());
         }
 
         $this->close();
-        return $result;
     }
 
     /**
