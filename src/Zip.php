@@ -358,7 +358,7 @@ class Zip extends Archive
         $this->writebytesAt($this->makeCrcAndSize(
             $crc,
             $size,
-            $csize,
+            $csize
         ), $offset + self::LOCAL_FILE_HEADER_CRC_OFFSET);
 
         // we store no data descriptor
