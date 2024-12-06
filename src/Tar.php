@@ -24,6 +24,7 @@ class Tar extends Archive
     protected $closed = true;
     protected $writeaccess = false;
     protected $position = 0;
+    protected $contentUntil = 0;
     protected $skipUntil = 0;
 
     /**
@@ -121,6 +122,7 @@ class Tar extends Archive
                 continue;
             }
 
+            $this->contentUntil = $this->position + $header['size'];
             $this->skipUntil = $this->position + ceil($header['size'] / 512) * 512;
 
             yield $this->header2fileinfo($header);
@@ -134,9 +136,22 @@ class Tar extends Archive
         $this->close();
     }
 
+    /**
+     * Reads content of a current archive entry.
+     *
+     * Works only when iterating trough the archive using the generator returned
+     * by the yieldContents().
+     *
+     * @param int $length maximum number of bytes to read
+     *
+     * @return string
+     */
     public function readCurrentEntry($length = PHP_INT_MAX)
     {
-        $length = min($length, $this->skipUntil - $this->position);
+        $length = (int) min($length, $this->contentUntil - $this->position);
+        if ($length === 0) {
+            return '';
+        }
         return $this->readbytes($length);
     }
 
@@ -790,3 +805,4 @@ class Tar extends Archive
         return $encoded;
     }
 }
+
