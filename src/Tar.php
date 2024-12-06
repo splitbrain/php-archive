@@ -23,6 +23,8 @@ class Tar extends Archive
     protected $memory = '';
     protected $closed = true;
     protected $writeaccess = false;
+    protected $position = 0;
+    protected $skipUntil = 0;
 
     /**
      * Sets the compression to use
@@ -72,6 +74,7 @@ class Tar extends Archive
             throw new ArchiveIOException('Could not open file for reading: '.$this->file);
         }
         $this->closed = false;
+        $this->position = 0;
     }
 
     /**
@@ -118,12 +121,23 @@ class Tar extends Archive
                 continue;
             }
 
-            $this->skipbytes(ceil($header['size'] / 512) * 512);
+            $this->skipUntil = $this->position + ceil($header['size'] / 512) * 512;
+
             yield $this->header2fileinfo($header);
+
+            $skip = $this->skipUntil - $this->position;
+            if ($skip > 0) {
+                $this->skipbytes($skip);
+            }
         }
 
         $this->close();
+    }
 
+    public function readCurrentEntry($length = PHP_INT_MAX)
+    {
+        $length = min($length, $this->skipUntil - $this->position);
+        return $this->readbytes($length);
     }
 
     /**
@@ -439,12 +453,14 @@ class Tar extends Archive
     protected function readbytes($length)
     {
         if ($this->comptype === Archive::COMPRESS_GZIP) {
-            return @gzread($this->fh, $length);
+            $ret = @gzread($this->fh, $length);
         } elseif ($this->comptype === Archive::COMPRESS_BZIP) {
-            return @bzread($this->fh, $length);
+            $ret = @bzread($this->fh, $length);
         } else {
-            return @fread($this->fh, $length);
+            $ret = @fread($this->fh, $length);
         }
+        $this->position += strlen($ret);
+        return $ret;
     }
 
     /**
@@ -494,6 +510,7 @@ class Tar extends Archive
         } else {
             @fseek($this->fh, $bytes, SEEK_CUR);
         }
+        $this->position += $bytes;
     }
 
     /**
