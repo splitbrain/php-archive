@@ -553,8 +553,8 @@ class Tar extends Archive
         $uid   = sprintf("%6s ", decoct($uid));
         $gid   = sprintf("%6s ", decoct($gid));
         $perm  = sprintf("%6s ", decoct($perm));
-        $size  = sprintf("%11s ", decoct($size));
-        $mtime = sprintf("%11s", decoct($mtime));
+        $size  = self::numberEncode($size, 12);
+        $mtime = self::numberEncode($size, 12);
 
         $data_first = pack("a100a8a8a8a12A12", $name, $perm, $uid, $gid, $size, $mtime);
         $data_last  = pack("a1a100a6a2a32a32a8a8a155a12", $typeflag, '', 'ustar', '', '', '', '', '', $prefix, "");
@@ -614,8 +614,8 @@ class Tar extends Archive
         $return['perm']     = OctDec(trim($header['perm']));
         $return['uid']      = OctDec(trim($header['uid']));
         $return['gid']      = OctDec(trim($header['gid']));
-        $return['size']     = OctDec(trim($header['size']));
-        $return['mtime']    = OctDec(trim($header['mtime']));
+        $return['size']     = self::numberDecode($header['size']);
+        $return['mtime']    = self::numberDecode($header['mtime']);
         $return['typeflag'] = $header['typeflag'];
         $return['link']     = trim($header['link']);
         $return['uname']    = trim($header['uname']);
@@ -713,4 +713,63 @@ class Tar extends Archive
         return Archive::COMPRESS_NONE;
     }
 
+    /**
+     * Decodes numeric values according to the 
+     * https://www.gnu.org/software/tar/manual/html_node/Extensions.html#Extensions
+     * (basically with support for big numbers)
+     *
+     * @param string $field
+     * $return int
+     */
+    static public function numberDecode($field)
+    {
+        $firstByte = ord(substr($field, 0, 1));
+        if ($firstByte === 255) {
+            $value = -1 << (8 * strlen($field));
+            $shift = 0;
+            for ($i = strlen($field) - 1; $i >= 0; $i--) {
+                $value += ord(substr($field, $i, 1)) << $shift;
+                $shift += 8;
+            }
+        } elseif ($firstByte === 128) {
+            $value = 0;
+            $shift = 0;
+            for ($i = strlen($field) - 1; $i > 0; $i--) {
+                $value += ord(substr($field, $i, 1)) << $shift;
+                $shift += 8;
+            }
+        } else {
+            $value = octdec(trim($field));
+        }
+        return $value;
+    }
+
+    /**
+     * Encodes numeric values according to the
+     * https://www.gnu.org/software/tar/manual/html_node/Extensions.html#Extensions
+     * (basically with support for big numbers)
+     *
+     * @param int $value
+     * @param int $length field length
+     * @return string
+     */
+    static public function numberEncode($value, $length)
+    {
+        // old implementations leave last byte empty
+        // octal encoding encodes three bits per byte
+        $maxValue = 1 << (($length - 1) * 3);
+        if ($value < 0) {
+            // PHP already stores integers as 2's complement
+            $value = pack(PHP_INT_SIZE === 8 ? 'J' : 'N', (int) $value);
+            $encoded = str_repeat(chr(255), max(1, $length - PHP_INT_SIZE));
+            $encoded .= substr($value, max(0, PHP_INT_SIZE - $length + 1));
+        } elseif ($value >= $maxValue) {
+            $value = pack(PHP_INT_SIZE === 8 ? 'J' : 'N', (int) $value);
+            $encoded = chr(128) . str_repeat(chr(0), max(0, $length - PHP_INT_SIZE - 1));
+            $encoded .= substr($value, max(0, PHP_INT_SIZE - $length + 1));
+        } else {
+            $encoded = sprintf("%" . ($length - 1) . "s ", decoct($value));
+        }
+        return $encoded;
+    }
 }
