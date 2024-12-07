@@ -804,6 +804,31 @@ class TarTestCase extends TestCase
         $this->assertEquals($refValue, $decoded);
     }
 
+    public function testReadCurrentEntry()
+    {
+        $tar = new Tar();
+        $tar->open(__DIR__ . '/tar/test.tar');
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
+        $tar->extract($out);
+
+        $tar = new Tar();
+        $tar->open(__DIR__ . '/tar/test.tar');
+        $pathsRead = array();
+        foreach($tar->yieldContents() as $i) {
+            $this->assertFileExists($out . '/' . $i->getPath());
+            if ($i->getIsdir()) {
+                $this->assertEquals('', $tar->readCurrentEntry());
+            } else {
+                $this->assertStringEqualsFile($out . '/' . $i->getPath(), $tar->readCurrentEntry());
+            }
+            $pathsRead[] = $i->getPath();
+        }
+        $pathsReadRef = array('tar', 'tar/testdata1.txt', 'tar/foobar', 'tar/foobar/testdata2.txt');
+        $this->assertEquals($pathsReadRef, $pathsRead);
+
+        self::RDelete($out);
+    }
+
     /**
      * recursive rmdir()/unlink()
      *
