@@ -319,16 +319,27 @@ class Tar extends Archive
                 throw new ArchiveIOException('Could not open file for reading: ' . $file);
             }
             while (!feof($fp)) {
-                $data = fread($fp, 512);
-                $read += strlen($data);
+                // try to read 1 MB (512 bytes is unperformant)
+                $data = fread($fp, 1048576);
                 if ($data === false) {
                     break;
                 }
                 if ($data === '') {
                     break;
                 }
-                $packed = pack("a512", $data);
-                $this->writebytes($packed);
+                $dataLen = strlen($data);
+                $read += $dataLen;
+                // how much of data read fully fills 512-byte blocks?
+                $passLen = ($dataLen >> 9) << 9;
+                if ($passLen === $dataLen) {
+                    // all - just write the data
+                    $this->writebytes($data);
+                } else {
+                    // directly write what fills 512-byte blocks fully
+                    $this->writebytes(substr($data, 0, $passLen));
+                    // pad the reminder to 512 bytes
+                    $this->writebytes(pack("a512", substr($data, $passLen)));
+                }
             }
             fclose($fp);
 
