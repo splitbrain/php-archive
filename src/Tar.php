@@ -15,6 +15,7 @@ namespace splitbrain\PHPArchive;
  */
 class Tar extends Archive
 {
+    const READ_CHUNK_SIZE = 1048576; // 1MB
 
     protected $file = '';
     protected $comptype = Archive::COMPRESS_AUTO;
@@ -319,8 +320,8 @@ class Tar extends Archive
                 throw new ArchiveIOException('Could not open file for reading: ' . $file);
             }
             while (!feof($fp)) {
-                // try to read 1 MB (512 bytes is unperformant)
-                $data = fread($fp, 1048576);
+                // for performance reasons read bigger chunks at once
+                $data = fread($fp, self::READ_CHUNK_SIZE);
                 if ($data === false) {
                     break;
                 }
@@ -375,8 +376,11 @@ class Tar extends Archive
         $fileinfo->setSize($len);
         $this->writeFileHeader($fileinfo);
 
-        for ($s = 0; $s < $len; $s += 512) {
-            $this->writebytes(pack("a512", substr($data, $s, 512)));
+        // write directly everything but the last block which needs padding
+        $passLen = ($len >> 9) << 9;
+        $this->writebytes(substr($data, 0, $passLen));
+        if ($passLen < $len) {
+            $this->writebytes(pack("a512", substr($data, $passLen, 512)));
         }
 
         if (is_callable($this->callback)) {
