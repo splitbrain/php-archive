@@ -778,6 +778,57 @@ class TarTestCase extends TestCase
         $this->assertTrue(true); // succeed if no exception, yet
     }
 
+    public function testNumberEncodeDecode()
+    {
+        // 2^34 + 17 = 2^2 * 2^32 + 17
+        $refValue = (1 << 34) + 17;
+        $encoded = Tar::numberEncode($refValue, 12);
+        $this->assertEquals(pack('CCnNN', 128, 0, 0, 1 << 2, 17), $encoded);
+        $decoded = Tar::numberDecode($encoded);
+        $this->assertEquals($refValue, $decoded);
+
+        $encoded = Tar::numberEncode($refValue, 7);
+        $this->assertEquals(pack('CnN', 128, 1 << 2, 17), $encoded);
+        $decoded = Tar::numberDecode($encoded);
+        $this->assertEquals($refValue, $decoded);
+
+        $refValue = -1234;
+        $encoded = Tar::numberEncode($refValue, 12);
+        $this->assertEquals(pack('CCnNN', 0xFF, 0xFF, 0xFFFF, 0xFFFFFFFF, -1234), $encoded);
+        $decoded = Tar::numberDecode($encoded);
+        $this->assertEquals($refValue, $decoded);
+
+        $encoded = Tar::numberEncode($refValue, 3);
+        $this->assertEquals(pack('Cn', 0xFF, -1234), $encoded);
+        $decoded = Tar::numberDecode($encoded);
+        $this->assertEquals($refValue, $decoded);
+    }
+
+    public function testReadCurrentEntry()
+    {
+        $tar = new Tar();
+        $tar->open(__DIR__ . '/tar/test.tar');
+        $out = sys_get_temp_dir() . '/dwtartest' . md5(time());
+        $tar->extract($out);
+
+        $tar = new Tar();
+        $tar->open(__DIR__ . '/tar/test.tar');
+        $pathsRead = array();
+        foreach($tar->yieldContents() as $i) {
+            $this->assertFileExists($out . '/' . $i->getPath());
+            if ($i->getIsdir()) {
+                $this->assertEquals('', $tar->readCurrentEntry());
+            } else {
+                $this->assertStringEqualsFile($out . '/' . $i->getPath(), $tar->readCurrentEntry());
+            }
+            $pathsRead[] = $i->getPath();
+        }
+        $pathsReadRef = array('tar', 'tar/testdata1.txt', 'tar/foobar', 'tar/foobar/testdata2.txt');
+        $this->assertEquals($pathsReadRef, $pathsRead);
+
+        self::RDelete($out);
+    }
+
     /**
      * recursive rmdir()/unlink()
      *
