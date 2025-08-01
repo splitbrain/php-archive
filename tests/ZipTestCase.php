@@ -561,6 +561,68 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Create an archive, extract it, and compare file properties
+     */
+    public function testFilePropertiesPreservation()
+    {
+        $input = glob($this->getDir() . '/../src/*');
+        $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.zip';
+        $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
+
+        // Create archive
+        $zip = new Zip();
+        $zip->create($archive);
+        foreach ($input as $path) {
+            $file = basename($path);
+            $zip->addFile($path, $file);
+        }
+        $zip->close();
+        $this->assertFileExists($archive);
+
+        // Extract archive
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($extract);
+        $zip->close();
+
+        // Compare file properties
+        foreach ($input as $originalPath) {
+            $filename = basename($originalPath);
+            $extractedPath = $extract . '/' . $filename;
+
+            $this->assertFileExists($extractedPath, "Extracted file should exist: $filename");
+
+            // Compare file sizes
+            $originalSize = filesize($originalPath);
+            $extractedSize = filesize($extractedPath);
+            $this->assertEquals($originalSize, $extractedSize, "File size should match for: $filename");
+
+            // Compare file contents
+            $originalContent = file_get_contents($originalPath);
+            $extractedContent = file_get_contents($extractedPath);
+            $this->assertEquals($originalContent, $extractedContent, "File content should match for: $filename");
+
+            // Compare modification times (allow small difference due to tar format limitations)
+            $originalMtime = filemtime($originalPath);
+            $extractedMtime = filemtime($extractedPath);
+            $this->assertLessThanOrEqual(1, abs($originalMtime - $extractedMtime),
+                "Modification time should be preserved (within 1 second) for: $filename");
+
+            // Compare file permissions (only on Unix-like systems)
+            if (DIRECTORY_SEPARATOR === '/') {
+                $originalPerms = fileperms($originalPath) & 0777;
+                $extractedPerms = fileperms($extractedPath) & 0777;
+                $this->assertEquals($originalPerms, $extractedPerms,
+                    "File permissions should match for: $filename");
+            }
+        }
+
+        self::RDelete($extract);
+        unlink($archive);
+    }
+
+
+    /**
      * recursive rmdir()/unlink()
      *
      * @static

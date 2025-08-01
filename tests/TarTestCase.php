@@ -16,7 +16,7 @@ class TarTestCase extends TestCase
     protected $extensions = array('tar');
 
     /** @inheritdoc */
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
         if (extension_loaded('zlib')) {
@@ -31,7 +31,7 @@ class TarTestCase extends TestCase
     }
 
     /** @inheritdoc */
-    protected function tearDown() : void
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->extensions[] = null;
@@ -53,7 +53,8 @@ class TarTestCase extends TestCase
      * Callback check function
      * @param FileInfo $fileinfo
      */
-    public function increaseCounter($fileinfo) {
+    public function increaseCounter($fileinfo)
+    {
         $this->assertInstanceOf('\\splitbrain\\PHPArchive\\FileInfo', $fileinfo);
         $this->counter++;
     }
@@ -560,7 +561,8 @@ class TarTestCase extends TestCase
     /**
      * Add a zero byte file to a tar and extract it again
      */
-    public function testZeroByteFile() {
+    public function testZeroByteFile()
+    {
         $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
         $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
 
@@ -814,7 +816,7 @@ class TarTestCase extends TestCase
         $tar = new Tar();
         $tar->open(__DIR__ . '/tar/test.tar');
         $pathsRead = array();
-        foreach($tar->yieldContents() as $i) {
+        foreach ($tar->yieldContents() as $i) {
             $this->assertFileExists($out . '/' . $i->getPath());
             if ($i->getIsdir()) {
                 $this->assertEquals('', $tar->readCurrentEntry());
@@ -827,6 +829,67 @@ class TarTestCase extends TestCase
         $this->assertEquals($pathsReadRef, $pathsRead);
 
         self::RDelete($out);
+    }
+
+    /**
+     * Create an archive, extract it, and compare file properties
+     */
+    public function testFilePropertiesPreservation()
+    {
+        $input = glob($this->getDir() . '/../src/*');
+        $archive = sys_get_temp_dir() . '/dwtartest' . md5(time()) . '.tar';
+        $extract = sys_get_temp_dir() . '/dwtartest' . md5(time() + 1);
+
+        // Create archive
+        $tar = new Tar();
+        $tar->create($archive);
+        foreach ($input as $path) {
+            $file = basename($path);
+            $tar->addFile($path, $file);
+        }
+        $tar->close();
+        $this->assertFileExists($archive);
+
+        // Extract archive
+        $tar = new Tar();
+        $tar->open($archive);
+        $tar->extract($extract);
+        $tar->close();
+
+        // Compare file properties
+        foreach ($input as $originalPath) {
+            $filename = basename($originalPath);
+            $extractedPath = $extract . '/' . $filename;
+
+            $this->assertFileExists($extractedPath, "Extracted file should exist: $filename");
+
+            // Compare file sizes
+            $originalSize = filesize($originalPath);
+            $extractedSize = filesize($extractedPath);
+            $this->assertEquals($originalSize, $extractedSize, "File size should match for: $filename");
+
+            // Compare file contents
+            $originalContent = file_get_contents($originalPath);
+            $extractedContent = file_get_contents($extractedPath);
+            $this->assertEquals($originalContent, $extractedContent, "File content should match for: $filename");
+
+            // Compare modification times (allow small difference due to tar format limitations)
+            $originalMtime = filemtime($originalPath);
+            $extractedMtime = filemtime($extractedPath);
+            $this->assertLessThanOrEqual(1, abs($originalMtime - $extractedMtime),
+                "Modification time should be preserved (within 1 second) for: $filename");
+
+            // Compare file permissions (only on Unix-like systems)
+            if (DIRECTORY_SEPARATOR === '/') {
+                $originalPerms = fileperms($originalPath) & 0777;
+                $extractedPerms = fileperms($extractedPath) & 0777;
+                $this->assertEquals($originalPerms, $extractedPerms,
+                    "File permissions should match for: $filename");
+            }
+        }
+
+        self::RDelete($extract);
+        unlink($archive);
     }
 
     /**
