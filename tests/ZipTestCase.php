@@ -58,14 +58,15 @@ class ZipTestCase extends TestCase
      */
     public function testNotAZip()
     {
-        $tmp = tempnam(sys_get_temp_dir(), 'phpa-bad-');
+        $tmp = sys_get_temp_dir() . '/phpa-bad-' . md5(uniqid('', true)) . '.bin';
         file_put_contents($tmp, str_repeat('this is not a zip file ', 50));
+        $zip = new Zip();
+        $zip->open($tmp);
         try {
-            $zip = new Zip();
-            $zip->open($tmp);
             $this->expectException(ArchiveCorruptedException::class);
             iterator_to_array($zip->yieldContents());
         } finally {
+            try { $zip->close(); } catch (\Exception $e) { /* already errored */ }
             @unlink($tmp);
         }
     }
@@ -75,14 +76,15 @@ class ZipTestCase extends TestCase
      */
     public function testTruncatedFile()
     {
-        $tmp = tempnam(sys_get_temp_dir(), 'phpa-trunc-');
+        $tmp = sys_get_temp_dir() . '/phpa-trunc-' . md5(uniqid('', true)) . '.bin';
         file_put_contents($tmp, "PK\x03\x04");
+        $zip = new Zip();
+        $zip->open($tmp);
         try {
-            $zip = new Zip();
-            $zip->open($tmp);
             $this->expectException(ArchiveCorruptedException::class);
             iterator_to_array($zip->yieldContents());
         } finally {
+            try { $zip->close(); } catch (\Exception $e) { /* already errored */ }
             @unlink($tmp);
         }
     }
