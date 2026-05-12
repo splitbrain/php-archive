@@ -17,6 +17,10 @@ class Zip extends Archive
 {
     const LOCAL_FILE_HEADER_CRC_OFFSET = 14;
 
+    const SIG_LOCAL_FILE_HEADER    = "\x50\x4b\x03\x04";
+    const SIG_CENTRAL_FILE_HEADER  = "\x50\x4b\x01\x02";
+    const SIG_END_OF_CENTRAL_DIR   = "\x50\x4b\x05\x06";
+
     protected $file = '';
     protected $fh;
     protected $memory = '';
@@ -480,7 +484,7 @@ class Zip extends Archive
             $this->writebytes($ctrldir);
 
             // write end of central directory record
-            $this->writebytes("\x50\x4b\x05\x06"); // end of central dir signature
+            $this->writebytes(self::SIG_END_OF_CENTRAL_DIR);
             $this->writebytes(pack('v', 0)); // number of this disk
             $this->writebytes(pack('v', 0)); // number of the disk with the start of the central directory
             $this->writebytes(pack('v',
@@ -553,18 +557,17 @@ class Zip extends Archive
 
         @fseek($this->fh, $size - $maximum_size);
         $pos   = ftell($this->fh);
-        $bytes = 0x00000000;
+        $bytes = '';
 
         while ($pos < $size) {
-            $byte  = @fread($this->fh, 1);
-            $bytes = (($bytes << 8) & 0xFFFFFFFF) | ord($byte);
-            if ($bytes == 0x504b0506) {
+            $bytes = substr($bytes . (string)@fread($this->fh, 1), -4);
+            if ($bytes === self::SIG_END_OF_CENTRAL_DIR) {
                 break;
             }
             $pos++;
         }
 
-        if ($bytes != 0x504b0506) {
+        if ($bytes !== self::SIG_END_OF_CENTRAL_DIR) {
             throw new ArchiveCorruptedException(
                 'End of central directory signature not found - not a valid ZIP file'
             );
@@ -926,7 +929,7 @@ class Zip extends Archive
 
         list($name, $extra) = $this->encodeFilename($name);
 
-        $header = "\x50\x4b\x01\x02"; // central file header signature
+        $header = self::SIG_CENTRAL_FILE_HEADER;
         $header .= pack('v', 14); // version made by - VFAT
         $header .= pack('v', 20); // version needed to extract - 2.0
         $header .= pack('v', 0); // general purpose flag - no flags set
@@ -973,7 +976,7 @@ class Zip extends Archive
 
         list($name, $extra) = $this->encodeFilename($name);
 
-        $header = "\x50\x4b\x03\x04"; //  local file header signature
+        $header = self::SIG_LOCAL_FILE_HEADER;
         $header .= pack('v', 20); // version needed to extract - 2.0
         $header .= pack('v', 0); // general purpose flag - no flags set
         $header .= pack('v', $comp); // compression method - deflate|none
