@@ -554,19 +554,17 @@ class Zip extends Archive
         @fseek($this->fh, $size - $maximum_size);
         $pos   = ftell($this->fh);
         $bytes = 0x00000000;
-        $found = false;
 
         while ($pos < $size) {
             $byte  = @fread($this->fh, 1);
             $bytes = (($bytes << 8) & 0xFFFFFFFF) | ord($byte);
             if ($bytes == 0x504b0506) {
-                $found = true;
                 break;
             }
             $pos++;
         }
 
-        if (!$found) {
+        if ($bytes != 0x504b0506) {
             throw new ArchiveCorruptedException(
                 'End of central directory signature not found - not a valid ZIP file'
             );
