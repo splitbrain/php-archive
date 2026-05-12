@@ -89,6 +89,7 @@ class Zip extends Archive
      *
      * @see contents()
      * @throws ArchiveIOException
+     * @throws ArchiveCorruptedException
      * @return FileInfo[]
      */
     public function yieldContents()
@@ -129,6 +130,7 @@ class Zip extends Archive
      * @param string     $exclude a regular expression of files to exclude
      * @param string     $include a regular expression of files to include
      * @throws ArchiveIOException
+     * @throws ArchiveCorruptedException
      * @return FileInfo[]
      */
     public function extract($outdir, $strip = '', $exclude = '', $include = '')
@@ -538,6 +540,7 @@ class Zip extends Archive
      * This key-value list contains general information about the ZIP file
      *
      * @return array
+     * @throws ArchiveCorruptedException when the file is not a valid ZIP archive
      */
     protected function readCentralDir()
     {
@@ -551,20 +554,33 @@ class Zip extends Archive
         @fseek($this->fh, $size - $maximum_size);
         $pos   = ftell($this->fh);
         $bytes = 0x00000000;
+        $found = false;
 
         while ($pos < $size) {
             $byte  = @fread($this->fh, 1);
             $bytes = (($bytes << 8) & 0xFFFFFFFF) | ord($byte);
             if ($bytes == 0x504b0506) {
+                $found = true;
                 break;
             }
             $pos++;
+        }
+
+        if (!$found) {
+            throw new ArchiveCorruptedException(
+                'End of central directory signature not found - not a valid ZIP file'
+            );
         }
 
         $data = unpack(
             'vdisk/vdisk_start/vdisk_entries/ventries/Vsize/Voffset/vcomment_size',
             fread($this->fh, 18)
         );
+        if ($data === false) {
+            throw new ArchiveCorruptedException(
+                'Could not read end of central directory record'
+            );
+        }
 
         if ($data['comment_size'] != 0) {
             $centd['comment'] = fread($this->fh, $data['comment_size']);
