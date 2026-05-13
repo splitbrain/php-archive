@@ -53,6 +53,51 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Feeding a file without an End-of-Central-Directory signature must raise
+     * ArchiveCorruptedException, not bubble up PHP warnings from unpack().
+     */
+    public function testNotAZip()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-bad-' . md5(uniqid('', true)) . '.bin';
+        file_put_contents($tmp, str_repeat('this is not a zip file ', 50));
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            iterator_to_array($zip->yieldContents());
+        } finally {
+            try {
+                $zip->close();
+            } catch(\Exception $e) {
+                /* already errored */
+            }
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * A truncated file (smaller than the EOCD record) must also fail cleanly.
+     */
+    public function testTruncatedFile()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-trunc-' . md5(uniqid('', true)) . '.bin';
+        file_put_contents($tmp, "PK\x03\x04");
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            iterator_to_array($zip->yieldContents());
+        } finally {
+            try {
+                $zip->close();
+            } catch(\Exception $e) {
+                /* already errored */
+            }
+            @unlink($tmp);
+        }
+    }
+
+    /**
      * simple test that checks that the given filenames and contents can be grepped from
      * the uncompressed zip stream
      *
