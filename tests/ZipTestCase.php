@@ -666,6 +666,76 @@ class ZipTestCase extends TestCase
         unlink($archive);
     }
 
+    /**
+     * An in-memory archive with a preceding entry followed by an addFile() entry must
+     * round-trip cleanly.
+     *
+     * addFile() back-patches CRC and sizes into the local file header via writebytesAt().
+     * For in-memory archives that patch only lands correctly when the entry sits at a
+     * non-zero offset, so a leading addData() entry is required to expose the bug.
+     *
+     * @depends testExtZipIsInstalled
+     */
+    public function testInMemoryAddFileAfterPreviousEntry()
+    {
+        $dir = $this->getDir() . '/zip';
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $extract = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+
+        $source = file_get_contents("$dir/block.txt");
+
+        $zip = new Zip();
+        $zip->create(); // in memory, no filename
+        $zip->addData('manifest.json', '{"a":"b"}'); // gives the next entry a non-zero offset
+        $zip->addFile("$dir/block.txt", 'block.txt');
+        $data = $zip->getArchive();
+        file_put_contents($archive, $data);
+
+        // The local file header of the streamed entry must carry the back-patched CRC and
+        // sizes. A failed patch leaves them zero, which the library's own extract() would
+        // still tolerate (it reads the central directory), so assert on the header directly.
+        $header = $this->localFileHeader($data, 'block.txt');
+        $this->assertNotEquals(0, $header['crc'], 'Local file header CRC must be patched');
+        $this->assertNotEquals(0, $header['csize'], 'Local file header compressed size must be patched');
+        $this->assertEquals(strlen($source), $header['size'], 'Local file header uncompressed size must be patched');
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($extract);
+        $zip->close();
+
+        $this->assertFileExists("$extract/block.txt");
+        $this->assertEquals($source, file_get_contents("$extract/block.txt"),
+            'Extracted file must be byte-identical to the source');
+
+        $this->nativeCheck($archive);
+        $this->native7ZipCheck($archive);
+
+        self::RDelete($extract);
+        unlink($archive);
+    }
+
+
+    /**
+     * Locate a local file header by name and return its CRC and size fields
+     *
+     * @param string $data raw ZIP archive
+     * @param string $name entry name to look for
+     * @return array{crc: int, csize: int, size: int}
+     */
+    protected function localFileHeader($data, $name)
+    {
+        $offset = 0;
+        while (($offset = strpos($data, Zip::SIG_LOCAL_FILE_HEADER, $offset)) !== false) {
+            $fields  = unpack('Vcrc/Vcsize/Vsize/vnamelen', substr($data, $offset + 14, 14));
+            $entry   = substr($data, $offset + 30, $fields['namelen']);
+            if ($entry === $name) {
+                return array('crc' => $fields['crc'], 'csize' => $fields['csize'], 'size' => $fields['size']);
+            }
+            $offset += 4;
+        }
+        $this->fail("No local file header for '$name' found in archive");
+    }
 
     /**
      * recursive rmdir()/unlink()
