@@ -511,6 +511,75 @@ class TarTestCase extends TestCase
     }
 
     /**
+     * A file name too long for the entry's own header is taken from the pax records
+     */
+    public function testPaxLongPath()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
+        $path = 'тестовый-каталог/ä-слайд-150x150-длинное-имя-файла-которое-не-влезает-в-ustar-заголовок.jpg';
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-longpath.tar");
+        $content = $tar->contents();
+
+        $this->assertCount(3, $content);
+        $this->assertEquals('', $content[0]->getPath()); // the archive root itself
+        $this->assertEquals('тестовый-каталог', $content[1]->getPath());
+        $this->assertEquals($path, $content[2]->getPath());
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-longpath.tar");
+        $tar->extract($out);
+
+        clearstatcache();
+
+        $this->assertEquals("testcontent1\n", file_get_contents("$out/$path"));
+    }
+
+    /**
+     * Pax records describe the entry following them, a global header describes all entries
+     */
+    public function testPaxRecords()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
+        $path = 'тестовый-каталог/ä-слайд-очень-длинное-имя-файла-не-влезающее-в-ustar.jpg';
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-fields.tar");
+        $content = $tar->contents();
+
+        $this->assertCount(2, $content);
+
+        // this entry has no records of its own and inherits the global ones
+        $this->assertEquals('plain.txt', $content[0]->getPath());
+        $this->assertEquals('globaluser', $content[0]->getOwner());
+        $this->assertEquals('globalgroup', $content[0]->getGroup());
+        $this->assertEquals(999, $content[0]->getUid());
+        $this->assertEquals(222, $content[0]->getGid()); // no record, taken from the header
+        $this->assertEquals(1400000000, $content[0]->getMtime());
+
+        // the records of this entry win over its header and over the global ones
+        $this->assertEquals($path, $content[1]->getPath());
+        $this->assertEquals(13, $content[1]->getSize()); // its header says 0
+        $this->assertEquals(1500000000, $content[1]->getMtime()); // fractional in the record
+        $this->assertEquals(1234, $content[1]->getUid());
+        $this->assertEquals(333, $content[1]->getGid());
+        $this->assertEquals('globaluser', $content[1]->getOwner());
+        $this->assertEquals('', $content[1]->getGroup()); // an empty record deletes the value
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-fields.tar");
+        $tar->extract($out);
+
+        clearstatcache();
+
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/plain.txt'));
+        $this->assertEquals("testcontent2\n", file_get_contents("$out/$path"));
+    }
+
+    /**
      * Pax extended headers are metadata and should not show up as entries
      */
     public function testPaxExtendedHeader()

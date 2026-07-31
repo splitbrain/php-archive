@@ -7,7 +7,8 @@ namespace splitbrain\PHPArchive;
  *
  * Creates or extracts Tar archives. Supports gz and bzip compression
  *
- * Long pathnames (>100 chars) are supported in POSIX ustar and GNU longlink formats.
+ * Long pathnames (>100 chars) are supported in POSIX ustar and GNU longlink formats. Pax
+ * extended headers are understood when reading.
  *
  * @author  Andreas Gohr <andi@splitbrain.org>
  * @package splitbrain\PHPArchive
@@ -25,6 +26,18 @@ class Tar extends Archive
      */
     const SUPPORTED_TYPEFLAGS = array("\0", '0', '5', '7');
 
+    /**
+     * Type flags of the metadata headers that describe the entry following them
+     *
+     * 'L' and 'K' are the GNU long file name and long link target, 'x' is a pax extended header.
+     */
+    const METADATA_TYPEFLAGS = array('L', 'K', 'x');
+
+    /**
+     * Largest metadata header data that is read into memory
+     */
+    const MAX_METADATA_SIZE = 1048576; // 1MB
+
     protected $file = '';
     protected $comptype = Archive::COMPRESS_AUTO;
     protected $complevel = 9;
@@ -35,6 +48,7 @@ class Tar extends Archive
     protected $position = 0;
     protected $contentUntil = 0;
     protected $skipUntil = 0;
+    protected $paxGlobal = array();
 
     /**
      * Sets the compression to use
@@ -85,6 +99,7 @@ class Tar extends Archive
         }
         $this->closed = false;
         $this->position = 0;
+        $this->paxGlobal = array();
     }
 
     /**
@@ -631,8 +646,9 @@ class Tar extends Archive
     /**
      * Parse the header of an archive entry
      *
+     * Metadata headers preceding an entry are resolved and applied to the entry they describe.
      * Entries that can not be represented as a FileInfo are consumed and reported as no entry:
-     * their type flag either marks pure metadata (like pax extended headers) or an entry type
+     * their type flag either marks pure metadata (like a pax global header) or an entry type
      * that is not supported (like links or sparse files).
      *
      * @param string $block a 512 byte block containing the header data
@@ -646,18 +662,36 @@ class Tar extends Archive
             return false;
         }
 
-        // Handle Long-Link entries from GNU Tar
-        if ($header['typeflag'] === 'L') {
-            // following data block(s) is the filename
-            $filename = trim($this->readbytes(ceil($header['size'] / 512) * 512));
-            // next block is the real header
+        // a pax global header holds defaults for all entries following it
+        if ($header['typeflag'] === 'g') {
+            $records = $this->parsePaxRecords($this->readMetadata($header['size']));
+            $this->paxGlobal = array_merge($this->paxGlobal, $records);
+            return false;
+        }
+
+        $filename = '';
+        $records = array();
+
+        // resolve the metadata headers in front of the entry they describe
+        while (in_array($header['typeflag'], self::METADATA_TYPEFLAGS, true)) {
+            $data = $this->readMetadata($header['size']);
+            if ($header['typeflag'] === 'L') {
+                $filename = trim($data);
+            } elseif ($header['typeflag'] === 'x') {
+                $records = array_merge($records, $this->parsePaxRecords($data));
+            } // 'K' holds a long link target, links are not supported anyway
+
             $header = $this->decodeHeader($this->readbytes(512));
             if ($header === false) {
                 return false;
             }
-            // overwrite the filename
+        }
+
+        if ($filename !== '') {
             $header['filename'] = $filename;
         }
+        // entry specific records win over the global ones
+        $header = $this->applyPaxRecords($header, array_merge($this->paxGlobal, $records));
 
         if (!in_array($header['typeflag'], self::SUPPORTED_TYPEFLAGS, true)) {
             // the data blocks hold metadata or an unsupported entry, throw them away
@@ -666,6 +700,92 @@ class Tar extends Archive
         }
 
         return $header;
+    }
+
+    /**
+     * Read the data blocks of a metadata header
+     *
+     * Metadata beyond any sensible size is skipped instead of being loaded into memory, it can
+     * only come from a broken or hostile archive. The entry then keeps what its own header says.
+     *
+     * @param int $size the size as given in the metadata header
+     * @return string the data without the padding of the last block, empty when it was skipped
+     */
+    protected function readMetadata($size)
+    {
+        if ($size <= 0) {
+            return '';
+        }
+        if ($size > self::MAX_METADATA_SIZE) {
+            $this->skipbytes(ceil($size / 512) * 512);
+            return '';
+        }
+        return substr($this->readbytes(ceil($size / 512) * 512), 0, $size);
+    }
+
+    /**
+     * Split the data of a pax header into its records
+     *
+     * Each record is stored as "<length> <keyword>=<value>\n" with length being the length of
+     * the whole record. Parsing stops at the first malformed record.
+     *
+     * @param string $data the data of a pax header
+     * @return string[] record values indexed by their keyword
+     */
+    protected function parsePaxRecords($data)
+    {
+        $records = array();
+        $length = strlen($data);
+        $position = 0;
+
+        while ($position < $length) {
+            $space = strpos($data, ' ', $position);
+            if ($space === false) {
+                break;
+            }
+
+            $digits = $space - $position;
+            $reclen = (int)substr($data, $position, $digits);
+            if ($reclen <= $digits + 2 || $position + $reclen > $length) {
+                break;
+            }
+
+            // the record is the keyword and value between the space and the trailing newline
+            $record = substr($data, $space + 1, $reclen - $digits - 2);
+            $equals = strpos($record, '=');
+            if ($equals !== false) {
+                $records[substr($record, 0, $equals)] = substr($record, $equals + 1);
+            }
+
+            $position += $reclen;
+        }
+
+        return $records;
+    }
+
+    /**
+     * Apply the given pax records to a decoded header
+     *
+     * A record with an empty value deletes what the entry's own header provides, that is how a
+     * global record is suppressed for a single entry. Numbers can not be deleted, values that are
+     * no numbers are ignored. Records without a counterpart in the header, like access times or
+     * link targets, are ignored as well.
+     *
+     * @param array $header the decoded header of the entry the records belong to
+     * @param string[] $records record values indexed by their keyword
+     * @return array the header with the records applied
+     */
+    protected function applyPaxRecords($header, $records)
+    {
+        $strings = array_intersect_key($records, array_flip(array('uname', 'gname')));
+        if (isset($records['path'])) {
+            $strings['filename'] = $records['path']; // the only keyword the header names differently
+        }
+
+        $numbers = array_intersect_key($records, array_flip(array('size', 'mtime', 'uid', 'gid')));
+        $numbers = array_map('intval', array_filter($numbers, 'is_numeric'));
+
+        return array_merge($header, $strings, $numbers);
     }
 
     /**
