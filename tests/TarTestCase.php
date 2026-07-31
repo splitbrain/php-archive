@@ -435,6 +435,107 @@ class TarTestCase extends TestCase
         }
     }
 
+    /**
+     * A pax global extended header is metadata and should not show up as an entry
+     */
+    public function testPaxGlobalHeader()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-global.tar");
+        $content = $tar->contents();
+
+        $this->assertCount(1, $content);
+        $this->assertEquals('testdata1.txt', $content[0]->getPath());
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-global.tar");
+        $tar->extract($out);
+
+        clearstatcache();
+
+        $this->assertFileNotExists($out . '/pax_global_header');
+        $this->assertFileExists($out . '/testdata1.txt');
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/testdata1.txt'));
+    }
+
+    /**
+     * Old v7 archives use a NUL byte as typeflag for regular files
+     */
+    public function testV7Extract()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
+
+        $tar = new Tar();
+        $tar->open("$dir/v7.tar");
+        $content = $tar->contents();
+
+        $this->assertCount(1, $content);
+        $this->assertFalse($content[0]->getIsdir());
+
+        $tar = new Tar();
+        $tar->open("$dir/v7.tar");
+        $tar->extract($out);
+
+        clearstatcache();
+
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/testdata1.txt'));
+    }
+
+    /**
+     * Symlinks can not be created, they are skipped instead of being mistaken for directories
+     */
+    public function testSymlinkExtract()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
+
+        $tar = new Tar();
+        $tar->open("$dir/symlink.tar");
+        $content = $tar->contents();
+
+        $this->assertCount(1, $content);
+        $this->assertEquals('testdata1.txt', $content[0]->getPath());
+
+        $tar = new Tar();
+        $tar->open("$dir/symlink.tar");
+        $tar->extract($out);
+
+        clearstatcache();
+
+        $this->assertFileNotExists($out . '/link.txt');
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/testdata1.txt'));
+    }
+
+    /**
+     * Pax extended headers are metadata and should not show up as entries
+     */
+    public function testPaxExtendedHeader()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = vfsStream::url('home_root_path/dwtartest' . md5(time()));
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-posix.tar");
+        $content = $tar->contents();
+
+        $this->assertCount(2, $content);
+        $this->assertEquals('', $content[0]->getPath()); // the archive root itself
+        $this->assertEquals('testdata1.txt', $content[1]->getPath());
+
+        $tar = new Tar();
+        $tar->open("$dir/pax-posix.tar");
+        $tar->extract($out);
+
+        clearstatcache();
+
+        $this->assertFileNotExists($out . '/PaxHeaders');
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/testdata1.txt'));
+    }
+
     // FS#1442
     public function testCreateLongFile()
     {

@@ -17,6 +17,14 @@ class Tar extends Archive
 {
     const READ_CHUNK_SIZE = 1048576; // 1MB
 
+    /**
+     * Type flags of the archive entries this class understands when reading
+     *
+     * A NUL byte and '0' mark a regular file, '5' a directory, '7' a contiguous file which is
+     * treated like a regular file. Entries flagged differently are skipped while reading.
+     */
+    const SUPPORTED_TYPEFLAGS = array("\0", '0', '5', '7');
+
     protected $file = '';
     protected $comptype = Archive::COMPRESS_AUTO;
     protected $complevel = 9;
@@ -621,13 +629,53 @@ class Tar extends Archive
     }
 
     /**
+     * Parse the header of an archive entry
+     *
+     * Entries that can not be represented as a FileInfo are consumed and reported as no entry:
+     * their type flag either marks pure metadata (like pax extended headers) or an entry type
+     * that is not supported (like links or sparse files).
+     *
+     * @param string $block a 512 byte block containing the header data
+     * @return array|false returns false when this block held no usable entry
+     * @throws ArchiveCorruptedException
+     */
+    protected function parseHeader($block)
+    {
+        $header = $this->decodeHeader($block);
+        if ($header === false) {
+            return false;
+        }
+
+        // Handle Long-Link entries from GNU Tar
+        if ($header['typeflag'] === 'L') {
+            // following data block(s) is the filename
+            $filename = trim($this->readbytes(ceil($header['size'] / 512) * 512));
+            // next block is the real header
+            $header = $this->decodeHeader($this->readbytes(512));
+            if ($header === false) {
+                return false;
+            }
+            // overwrite the filename
+            $header['filename'] = $filename;
+        }
+
+        if (!in_array($header['typeflag'], self::SUPPORTED_TYPEFLAGS, true)) {
+            // the data blocks hold metadata or an unsupported entry, throw them away
+            $this->skipbytes(ceil($header['size'] / 512) * 512);
+            return false;
+        }
+
+        return $header;
+    }
+
+    /**
      * Decode the given tar file header
      *
      * @param string $block a 512 byte block containing the header data
      * @return array|false returns false when this was a null block
      * @throws ArchiveCorruptedException
      */
-    protected function parseHeader($block)
+    protected function decodeHeader($block)
     {
         if (!$block || strlen($block) != 512) {
             throw new ArchiveCorruptedException('Unexpected length of header');
@@ -673,17 +721,6 @@ class Tar extends Archive
             $return['filename'] = trim($header['prefix']).'/'.$return['filename'];
         }
 
-        // Handle Long-Link entries from GNU Tar
-        if ($return['typeflag'] == 'L') {
-            // following data block(s) is the filename
-            $filename = trim($this->readbytes(ceil($return['size'] / 512) * 512));
-            // next block is the real header
-            $block  = $this->readbytes(512);
-            $return = $this->parseHeader($block);
-            // overwrite the filename
-            $return['filename'] = $filename;
-        }
-
         return $return;
     }
 
@@ -704,7 +741,7 @@ class Tar extends Archive
         $fileinfo->setMtime($header['mtime']);
         $fileinfo->setOwner($header['uname']);
         $fileinfo->setGroup($header['gname']);
-        $fileinfo->setIsdir((bool) $header['typeflag']);
+        $fileinfo->setIsdir($header['typeflag'] === '5');
 
         return $fileinfo;
     }
