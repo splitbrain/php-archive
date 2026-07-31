@@ -331,13 +331,19 @@ class Zip extends Archive
             throw new ArchiveIOException('Archive has been closed, files can no longer be added');
         }
 
+        if (is_dir($file)) {
+            // a directory has no content to read, storing its name is all it takes
+            $this->addData($fileinfo, '');
+            return;
+        }
+
         $fp = @fopen($file, 'rb');
         if ($fp === false) {
             throw new ArchiveIOException('Could not open file for reading: '.$file);
         }
 
         $offset = $this->dataOffset();
-        $name   = $fileinfo->getPath();
+        $name   = $this->makeEntryName($fileinfo);
         $time   = $fileinfo->getMtime();
 
         // write local file header (temporary CRC and size)
@@ -433,16 +439,21 @@ class Zip extends Archive
             throw new ArchiveIOException('Archive has been closed, files can no longer be added');
         }
 
+        if ($fileinfo->getIsdir()) {
+            $data = ''; // a directory is stored as an entry without content
+        }
+
         // prepare info and compress data
         $size     = strlen($data);
         $crc      = crc32($data);
-        if ($this->complevel) {
+        $comp     = !$fileinfo->getIsdir() && $this->complevel;
+        if ($comp) {
             $data = gzcompress($data, $this->complevel);
             $data = substr($data, 2, -4); // strip compression headers
         }
         $csize  = strlen($data);
         $offset = $this->dataOffset();
-        $name   = $fileinfo->getPath();
+        $name   = $this->makeEntryName($fileinfo);
         $time   = $fileinfo->getMtime();
 
         // write local file header
@@ -452,7 +463,7 @@ class Zip extends Archive
             $size,
             $csize,
             $name,
-            (bool) $this->complevel
+            (bool) $comp
         ));
 
         // we store no encryption header
@@ -470,7 +481,7 @@ class Zip extends Archive
             $size,
             $csize,
             $name,
-            (bool) $this->complevel,
+            (bool) $comp,
             $this->makeExternalAttributes($fileinfo)
         );
 
@@ -834,6 +845,20 @@ class Zip extends Archive
         } else {
             return $string;
         }
+    }
+
+    /**
+     * Returns the name to store the given file under
+     *
+     * Directories are stored with a trailing slash. Readers that look at neither the attributes
+     * nor the mode of an entry rely on it to recognize a directory.
+     *
+     * @param FileInfo $fileinfo
+     * @return string
+     */
+    protected function makeEntryName(FileInfo $fileinfo)
+    {
+        return $fileinfo->getPath() . ($fileinfo->getIsdir() ? '/' : '');
     }
 
     /**

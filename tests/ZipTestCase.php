@@ -463,6 +463,71 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Directories are stored as empty entries with a trailing slash
+     *
+     * @depends testExtZipIsInstalled
+     */
+    public function testAddDirectory()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $out = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+        $source = sys_get_temp_dir() . '/dwziptest' . md5(time() + 2);
+
+        mkdir($source);
+        chmod($source, 0750);
+
+        $fileinfo = new FileInfo('given');
+        $fileinfo->setIsdir(true);
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->addData($fileinfo, '');
+        $zip->addFile($source, 'fromdisk'); // adding a directory reads no content
+        $zip->addData('sub/file.txt', 'testcontent1');
+        $zip->close();
+
+        $raw = file_get_contents($archive);
+        $this->assertEquals('given/', $this->localHeaderName($raw, 0));
+
+        // a directory holds no data, so it is stored and not deflated
+        $header = unpack('vcompression/vmtime/vmdate/Vcrc/Vcompressed_size/Vsize', substr($raw, 8, 18));
+        $this->assertSame(0, $header['compression']);
+        $this->assertSame(0, $header['size']);
+        $this->assertSame(0, $header['compressed_size']);
+
+        // a reader that only looks at the name has to see a directory as well
+        $native = new \ZipArchive();
+        $native->open($archive);
+        $this->assertEquals('given/', $native->getNameIndex(0));
+        $this->assertEquals('fromdisk/', $native->getNameIndex(1));
+        $native->close();
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $content = $zip->contents();
+
+        $this->assertEquals('given', $content[0]->getPath());
+        $this->assertTrue($content[0]->getIsdir());
+        $this->assertTrue($content[1]->getIsdir());
+        $this->assertEquals(0750, $content[1]->getMode());
+        $this->assertFalse($content[2]->getIsdir());
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($out);
+
+        clearstatcache();
+
+        $this->assertDirectoryExists("$out/given");
+        $this->assertDirectoryExists("$out/fromdisk");
+        $this->assertEquals('testcontent1', file_get_contents("$out/sub/file.txt"));
+
+        self::RDelete($out);
+        rmdir($source);
+        unlink($archive);
+    }
+
+    /**
      * File modes are stored in the external attributes and restored when extracting
      */
     public function testFilePermissions()
