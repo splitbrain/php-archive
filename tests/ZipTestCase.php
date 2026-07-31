@@ -344,6 +344,137 @@ class ZipTestCase extends TestCase
         unlink($archive);
     }
 
+    /**
+     * Names outside the ASCII range are stored as UTF-8 and flagged as such
+     *
+     * @depends testExtZipIsInstalled
+     */
+    public function testUtf8Flag()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->addData('тестов_файл.txt', 'testcontent1');
+        $zip->addData('plain.txt', 'testcontent2');
+        $zip->close();
+
+        // the name has to be in the header as it was given, with bit 11 set
+        $raw = file_get_contents($archive);
+        $flag = unpack('v', substr($raw, 6, 2));
+        $this->assertSame(Zip::FLAG_UTF8, $flag[1] & Zip::FLAG_UTF8, 'UTF-8 flag not set');
+        $this->assertContains('тестов_файл.txt', array($this->localHeaderName($raw, 0)));
+
+        // an independent reader has to see the same name
+        $native = new \ZipArchive();
+        $native->open($archive);
+        $this->assertEquals('тестов_файл.txt', $native->getNameIndex(0));
+        $this->assertEquals('plain.txt', $native->getNameIndex(1));
+        $native->close();
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $content = $zip->contents();
+
+        $this->assertEquals('тестов_файл.txt', $content[0]->getPath());
+        $this->assertEquals('plain.txt', $content[1]->getPath());
+
+        $this->nativeCheck($archive);
+        $this->native7ZipCheck($archive);
+
+        unlink($archive);
+    }
+
+    /**
+     * Plain ASCII names need no flag
+     *
+     * @depends testExtZipIsInstalled
+     */
+    public function testAsciiHasNoUtf8Flag()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->addData('plain.txt', 'testcontent1');
+        $zip->close();
+
+        $raw = file_get_contents($archive);
+        $flag = unpack('v', substr($raw, 6, 2));
+        $this->assertSame(0, $flag[1] & Zip::FLAG_UTF8);
+
+        unlink($archive);
+    }
+
+    /**
+     * Names of an archive flagged as UTF-8 are taken as they are
+     */
+    public function testUtf8FlagExtract()
+    {
+        $dir = $this->getDir() . '/zip';
+        $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
+
+        $zip = new Zip();
+        $zip->open("$dir/utf8-flag.zip");
+        $content = $zip->contents();
+
+        $this->assertCount(2, $content);
+        $this->assertEquals('тестов_файл.txt', $content[0]->getPath());
+        $this->assertEquals('snowy☃.txt', $content[1]->getPath());
+
+        $zip = new Zip();
+        $zip->open("$dir/utf8-flag.zip");
+        $zip->extract($out);
+
+        clearstatcache();
+
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/тестов_файл.txt'));
+        $this->assertEquals("testcontent2\n", file_get_contents($out . '/snowy☃.txt'));
+
+        self::RDelete($out);
+    }
+
+    /**
+     * Archives written by older versions keep their names in a unicode path extra field
+     */
+    public function testLegacyUtf8PathExtract()
+    {
+        $dir = $this->getDir() . '/zip';
+        $out = sys_get_temp_dir() . '/dwziptest' . md5(time());
+
+        $zip = new Zip();
+        $zip->open("$dir/legacy-utf8path.zip");
+        $content = $zip->contents();
+
+        $this->assertCount(2, $content);
+        $this->assertEquals('тестов_файл.txt', $content[0]->getPath());
+        $this->assertEquals('täst.txt', $content[1]->getPath());
+
+        $zip = new Zip();
+        $zip->open("$dir/legacy-utf8path.zip");
+        $zip->extract($out);
+
+        clearstatcache();
+
+        $this->assertEquals("testcontent1\n", file_get_contents($out . '/тестов_файл.txt'));
+        $this->assertEquals("testcontent2\n", file_get_contents($out . '/täst.txt'));
+
+        self::RDelete($out);
+    }
+
+    /**
+     * Returns the file name stored in the local file header at the given offset
+     *
+     * @param string $raw the raw archive data
+     * @param int $offset position of the local file header
+     * @return string
+     */
+    protected function localHeaderName($raw, $offset)
+    {
+        $length = unpack('v', substr($raw, $offset + 26, 2));
+        return substr($raw, $offset + 30, $length[1]);
+    }
+
     public function testAddDataWithArchiveStreamIsClosed()
     {
         $this->expectException(ArchiveIOException::class);
