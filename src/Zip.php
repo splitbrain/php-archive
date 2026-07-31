@@ -266,7 +266,10 @@ class Zip extends Archive
             }
 
             @touch($output, $fileinfo->getMtime());
-            //FIXME what about permissions?
+            if ($header['mode']) {
+                // only archives that stored a mode get one applied
+                @chmod($output, $header['mode'] & 07777);
+            }
             if(is_callable($this->callback)) {
                 call_user_func($this->callback, $fileinfo);
             }
@@ -404,7 +407,8 @@ class Zip extends Archive
             $size,
             $csize,
             $name,
-            (bool) $this->complevel
+            (bool) $this->complevel,
+            $this->makeExternalAttributes($fileinfo)
         );
 
         if(is_callable($this->callback)) {
@@ -466,7 +470,8 @@ class Zip extends Archive
             $size,
             $csize,
             $name,
-            (bool) $this->complevel
+            (bool) $this->complevel,
+            $this->makeExternalAttributes($fileinfo)
         );
 
         if(is_callable($this->callback)) {
@@ -645,12 +650,49 @@ class Zip extends Archive
         $header['mtime']           = $this->makeUnixTime($header['mdate'], $header['mtime']);
         $header['stored_filename'] = $header['filename'];
         $header['status']          = 'ok';
-        if (substr($header['filename'], -1) == '/') {
-            $header['external'] = 0x41FF0010;
-        }
-        $header['folder'] = ($header['external'] == 0x41FF0010 || $header['external'] == 16) ? 1 : 0;
+        $header['folder']          = $this->isFolder($header) ? 1 : 0;
+        $header['mode']            = $this->headerMode($header);
 
         return $header;
+    }
+
+    /**
+     * Checks if the given header describes a directory
+     *
+     * Directories are stored with a trailing slash in their name. Some archivers rely on the
+     * MS-DOS directory attribute or on the file type of the Unix mode instead.
+     *
+     * @param array $header a central file header
+     * @return bool
+     */
+    protected function isFolder($header)
+    {
+        if (substr($header['filename'], -1) === '/') {
+            return true;
+        }
+        if ($header['external'] & 0x10) {
+            return true;
+        }
+
+        return ($this->headerMode($header) & 0170000) === 0040000;
+    }
+
+    /**
+     * Returns the file mode stored in the given header
+     *
+     * Only archives created on Unix keep a mode in the upper half of the external file
+     * attributes, other systems store data there that is of no use here.
+     *
+     * @param array $header a central file header
+     * @return int the mode including its file type bits, zero when the header holds none
+     */
+    protected function headerMode($header)
+    {
+        if (($header['version'] >> 8) !== 3) {
+            return 0; // not created on Unix
+        }
+
+        return ($header['external'] >> 16) & 0177777;
     }
 
     /**
@@ -694,7 +736,6 @@ class Zip extends Archive
 
         $header['stored_filename'] = $header['filename'];
         $header['status']          = "ok";
-        $header['folder']          = ($header['external'] == 0x41FF0010 || $header['external'] == 16) ? 1 : 0;
         return $header;
     }
 
@@ -739,7 +780,10 @@ class Zip extends Archive
         $fileinfo->setSize($header['size']);
         $fileinfo->setCompressedSize($header['compressed_size']);
         $fileinfo->setMtime($header['mtime']);
-        $fileinfo->setIsdir($header['external'] == 0x41FF0010 || $header['external'] == 16);
+        $fileinfo->setIsdir((bool) $header['folder']);
+        if ($header['mode']) {
+            $fileinfo->setMode($header['mode'] & 07777);
+        }
         $fileinfo->setPath($this->utf8Name($header, 'filename', 'utf8path'));
         $fileinfo->setComment($this->utf8Name($header, 'comment', 'utf8comment'));
 
@@ -790,6 +834,26 @@ class Zip extends Archive
         } else {
             return $string;
         }
+    }
+
+    /**
+     * Returns the external file attributes for the given file
+     *
+     * The upper half holds the Unix mode, the lower one the MS-DOS attributes, of which only the
+     * directory bit is used here. A mode that comes without file type bits is completed with them,
+     * otherwise readers can not tell what kind of entry they are looking at.
+     *
+     * @param FileInfo $fileinfo
+     * @return int
+     */
+    protected function makeExternalAttributes(FileInfo $fileinfo)
+    {
+        $mode = $fileinfo->getMode();
+        if (!($mode & 0170000)) {
+            $mode |= $fileinfo->getIsdir() ? 0040000 : 0100000;
+        }
+
+        return ($mode << 16) | ($fileinfo->getIsdir() ? 0x10 : 0);
     }
 
     /**
@@ -937,9 +1001,10 @@ class Zip extends Archive
      * @param int $clen length of the compressed data
      * @param string $name file name
      * @param boolean|null $comp if compression is used, if null it's determined from $len != $clen
+     * @param int $external external file attributes as returned by makeExternalAttributes()
      * @return string
      */
-    protected function makeCentralFileRecord($offset, $ts, $crc, $len, $clen, $name, $comp = null)
+    protected function makeCentralFileRecord($offset, $ts, $crc, $len, $clen, $name, $comp = null, $external = 0)
     {
         if(is_null($comp)) $comp = $len != $clen;
         $comp = $comp ? 8 : 0;
@@ -965,7 +1030,7 @@ class Zip extends Archive
         $header .= pack('v', 0); // file comment length
         $header .= pack('v', 0); // disk number start
         $header .= pack('v', 0); // internal file attributes
-        $header .= pack('V', 0); // external file attributes  @todo was 0x32!?
+        $header .= pack('V', $external); // external file attributes - mode and MS-DOS attributes
         $header .= pack('V', $offset); // relative offset of local header
         $header .= $name; // file name
 

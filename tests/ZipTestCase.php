@@ -463,6 +463,107 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * File modes are stored in the external attributes and restored when extracting
+     */
+    public function testFilePermissions()
+    {
+        $archive = sys_get_temp_dir() . '/dwziptest' . md5(time()) . '.zip';
+        $out = sys_get_temp_dir() . '/dwziptest' . md5(time() + 1);
+        $source = sys_get_temp_dir() . '/dwziptest' . md5(time() + 2) . '.txt';
+
+        file_put_contents($source, 'testcontent1');
+        chmod($source, 0600);
+
+        $zip = new Zip();
+        $zip->create($archive);
+        $zip->addFile($source, 'secret.txt');
+        $zip->addData(new FileInfo('script.sh'), "#!/bin/sh\n");
+        $zip->close();
+
+        // the mode belongs into the upper half of the external attributes, together with the
+        // file type bits telling readers this is a regular file
+        $this->assertSame(
+            0100600,
+            $this->centralHeaderAttributes(file_get_contents($archive), 0) >> 16
+        );
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $content = $zip->contents();
+
+        $this->assertEquals(0600, $content[0]->getMode());
+        $this->assertEquals(0664, $content[1]->getMode()); // the FileInfo default
+
+        $zip = new Zip();
+        $zip->open($archive);
+        $zip->extract($out);
+
+        clearstatcache();
+
+        $this->assertSame(0600, fileperms("$out/secret.txt") & 07777);
+        $this->assertSame(0664, fileperms("$out/script.sh") & 07777);
+
+        self::RDelete($out);
+        unlink($archive);
+        unlink($source);
+    }
+
+    /**
+     * Archives that were not created on Unix hold no mode, entries keep the default
+     */
+    public function testFilePermissionsWithoutMode()
+    {
+        $dir = $this->getDir() . '/zip';
+
+        $zip = new Zip();
+        $zip->open("$dir/issue14-windows.zip");
+        $content = $zip->contents();
+
+        $this->assertEquals(0664, $content[0]->getMode());
+        $this->assertFalse($content[0]->getIsdir());
+    }
+
+    /**
+     * Directories are recognized and keep their mode
+     */
+    public function testDirectoryPermissions()
+    {
+        $dir = $this->getDir() . '/zip';
+
+        $zip = new Zip();
+        $zip->open("$dir/test.zip");
+        $content = $zip->contents();
+
+        $modes = array();
+        foreach ($content as $fileinfo) {
+            $modes[$fileinfo->getPath()] = array($fileinfo->getIsdir(), $fileinfo->getMode());
+        }
+
+        $this->assertSame(array(true, 0755), $modes['zip']);
+        $this->assertSame(array(true, 0755), $modes['zip/foobar']);
+        $this->assertSame(array(false, 0644), $modes['zip/testdata1.txt']);
+    }
+
+    /**
+     * Returns the external file attributes of the central file header at the given index
+     *
+     * @param string $raw the raw archive data
+     * @param int $index position of the entry in the central directory
+     * @return int
+     */
+    protected function centralHeaderAttributes($raw, $index)
+    {
+        $offset = -1;
+        for ($i = 0; $i <= $index; $i++) {
+            $offset = strpos($raw, Zip::SIG_CENTRAL_FILE_HEADER, $offset + 1);
+            $this->assertNotFalse($offset, 'central file header not found');
+        }
+
+        $attributes = unpack('V', substr($raw, $offset + 38, 4));
+        return $attributes[1];
+    }
+
+    /**
      * Returns the file name stored in the local file header at the given offset
      *
      * @param string $raw the raw archive data
