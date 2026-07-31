@@ -10,6 +10,11 @@ namespace splitbrain\PHPArchive;
  * Long pathnames (>100 chars) are supported in POSIX ustar and GNU longlink formats. Pax
  * extended headers are understood when reading.
  *
+ * File names are expected to be UTF-8 encoded. The format has no field to declare the encoding
+ * of a name, so names are stored exactly as they are given and returned exactly as they are
+ * stored. For archives written by current tools that means UTF-8, older archives may use any
+ * encoding and can not be recognized as such.
+ *
  * @author  Andreas Gohr <andi@splitbrain.org>
  * @package splitbrain\PHPArchive
  * @license MIT

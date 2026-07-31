@@ -9,6 +9,11 @@ namespace splitbrain\PHPArchive;
  *
  * for specs see http://www.pkware.com/appnote
  *
+ * File names are expected to be UTF-8 encoded. Names outside the ASCII range are stored as UTF-8
+ * and flagged accordingly, names read from an archive are always returned as UTF-8: they are
+ * taken as they are when the archive flags them or provides them in an extra field, and are
+ * converted from CP437 otherwise, which is the encoding the format prescribes for unflagged names.
+ *
  * @author  Andreas Gohr <andi@splitbrain.org>
  * @package splitbrain\PHPArchive
  * @license MIT
