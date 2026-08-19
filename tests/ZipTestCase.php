@@ -509,7 +509,8 @@ class ZipTestCase extends TestCase
         $this->assertEquals('given', $content[0]->getPath());
         $this->assertTrue($content[0]->getIsdir());
         $this->assertTrue($content[1]->getIsdir());
-        $this->assertEquals(0750, $content[1]->getMode());
+        // Windows ignores chmod(), so the expected mode is taken from the source directory
+        $this->assertEquals(fileperms($source) & 0777, $content[1]->getMode());
         $this->assertFalse($content[2]->getIsdir());
 
         $zip = new Zip();
@@ -538,6 +539,7 @@ class ZipTestCase extends TestCase
 
         file_put_contents($source, 'testcontent1');
         chmod($source, 0600);
+        $mode = fileperms($source) & 0777; // Windows ignores chmod()
 
         $zip = new Zip();
         $zip->create($archive);
@@ -548,7 +550,7 @@ class ZipTestCase extends TestCase
         // the mode belongs into the upper half of the external attributes, together with the
         // file type bits telling readers this is a regular file
         $this->assertSame(
-            0100600,
+            0100000 | $mode,
             $this->centralHeaderAttributes(file_get_contents($archive), 0) >> 16
         );
 
@@ -556,7 +558,7 @@ class ZipTestCase extends TestCase
         $zip->open($archive);
         $content = $zip->contents();
 
-        $this->assertEquals(0600, $content[0]->getMode());
+        $this->assertEquals($mode, $content[0]->getMode());
         $this->assertEquals(0664, $content[1]->getMode()); // the FileInfo default
 
         $zip = new Zip();
@@ -565,8 +567,11 @@ class ZipTestCase extends TestCase
 
         clearstatcache();
 
-        $this->assertSame(0600, fileperms("$out/secret.txt") & 07777);
-        $this->assertSame(0664, fileperms("$out/script.sh") & 07777);
+        // only Unix-like systems can restore a mode
+        if (DIRECTORY_SEPARATOR === '/') {
+            $this->assertSame(0600, fileperms("$out/secret.txt") & 07777);
+            $this->assertSame(0664, fileperms("$out/script.sh") & 07777);
+        }
 
         self::RDelete($out);
         unlink($archive);
