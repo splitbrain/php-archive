@@ -158,8 +158,9 @@ class Zip extends Archive
 
         $extracted = array();
 
-        $cdir      = $this->readCentralDir();
-        $pos_entry = $cdir['offset']; // begin of the central file directory
+        $cdir         = $this->readCentralDir();
+        $pos_entry    = $cdir['offset']; // begin of the central file directory
+        $archive_size = filesize($this->file);
 
         for ($i = 0; $i < $cdir['entries']; $i++) {
             // read file header
@@ -170,6 +171,14 @@ class Zip extends Archive
             fseek($this->fh, $header['offset']); // seek to beginning of file header
             $header   = $this->readFileHeader($header);
             $fileinfo = $this->header2fileinfo($header);
+
+            // the declared entry data has to fit inside the archive, otherwise a lying
+            // or truncated header would make us read past EOF into other structures
+            if (ftell($this->fh) + $header['compressed_size'] > $archive_size) {
+                throw new ArchiveCorruptedException(
+                    'Compressed data of '.$header['stored_filename'].' exceeds the archive size'
+                );
+            }
 
             // apply strip rules
             $fileinfo->strip($strip);
@@ -224,10 +233,18 @@ class Zip extends Archive
             // read the file and store it on disk
             $size = $header['compressed_size'];
             while ($size != 0) {
-                $read_size   = ($size < 2048 ? $size : 2048);
-                $buffer      = fread($this->fh, $read_size);
-                $binary_data = pack('a'.$read_size, $buffer);
-                fwrite($fp, $binary_data, $read_size);
+                $read_size = ($size < 2048 ? $size : 2048);
+                $buffer    = fread($this->fh, $read_size);
+                // fread may return less than requested on a truncated archive; never pad
+                // short reads as that would write more data than the archive actually holds
+                if ($buffer === false || strlen($buffer) !== $read_size) {
+                    fclose($fp);
+                    @unlink($extractto);
+                    throw new ArchiveCorruptedException(
+                        'Could not read the expected data for '.$header['stored_filename']
+                    );
+                }
+                fwrite($fp, $buffer, $read_size);
                 $size -= $read_size;
             }
 
@@ -254,11 +271,22 @@ class Zip extends Archive
 
                 $size = $header['size'];
                 while ($size != 0) {
-                    $read_size   = ($size < 2048 ? $size : 2048);
-                    $buffer      = gzread($gzp, $read_size);
-                    $binary_data = pack('a'.$read_size, $buffer);
-                    @fwrite($fp, $binary_data, $read_size);
-                    $size -= $read_size;
+                    $read_size = ($size < 2048 ? $size : 2048);
+                    $buffer    = gzread($gzp, $read_size);
+                    $got       = ($buffer === false) ? 0 : strlen($buffer);
+                    // a decompressed stream shorter than the declared size means the header
+                    // lied; never pad the difference with NUL bytes to the declared length
+                    if ($got === 0) {
+                        fclose($fp);
+                        gzclose($gzp);
+                        @unlink($extractto);
+                        @unlink($output);
+                        throw new ArchiveCorruptedException(
+                            $header['stored_filename'].' is smaller than its declared uncompressed size'
+                        );
+                    }
+                    @fwrite($fp, $buffer, $got);
+                    $size -= $got;
                 }
                 fclose($fp);
                 gzclose($gzp);

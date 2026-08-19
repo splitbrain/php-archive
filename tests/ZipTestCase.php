@@ -98,6 +98,88 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * A stored entry that declares more data than the archive actually contains must not
+     * be extracted by reading past EOF and NUL-padding to the declared size.
+     */
+    public function testStoredEntryExceedingArchiveSize()
+    {
+        $declared = 1048576; // 1 MiB claimed, but only one byte of data is present
+        $name     = 'tiny.txt';
+        $lfh  = "PK\x03\x04";
+        $lfh .= pack('v', 20) . pack('v', 0) . pack('v', 0) . pack('v', 0) . pack('v', 0);
+        $lfh .= pack('V', 0) . pack('V', $declared) . pack('V', $declared);
+        $lfh .= pack('v', strlen($name)) . pack('v', 0) . $name;
+        $blob = $lfh . 'A';
+
+        $cfh  = "PK\x01\x02" . pack('v', 20) . pack('v', 20) . pack('v', 0) . pack('v', 0);
+        $cfh .= pack('v', 0) . pack('v', 0) . pack('V', 0) . pack('V', $declared) . pack('V', $declared);
+        $cfh .= pack('v', strlen($name)) . pack('v', 0) . pack('v', 0) . pack('v', 0);
+        $cfh .= pack('v', 0) . pack('V', 0) . pack('V', 0) . $name;
+
+        $cd_offset = strlen($blob);
+        $blob .= $cfh;
+        $blob .= "PK\x05\x06" . pack('v', 0) . pack('v', 0) . pack('v', 1) . pack('v', 1);
+        $blob .= pack('V', strlen($cfh)) . pack('V', $cd_offset) . pack('v', 0);
+
+        $tmp = sys_get_temp_dir() . '/phpa-stored-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-stored-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $blob);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * A deflated entry whose stream is shorter than its declared uncompressed size must not
+     * be extracted by NUL-padding the decompressed output up to the declared size.
+     */
+    public function testCompressedEntrySmallerThanDeclaredSize()
+    {
+        $raw       = 'hello';
+        $deflated  = gzdeflate($raw, 9);
+        $comp_size = strlen($deflated);
+        $declared  = 1048576; // 1 MiB claimed uncompressed size
+        $crc       = crc32($raw);
+        $name      = 'small.txt';
+
+        $lfh  = "PK\x03\x04" . pack('v', 20) . pack('v', 0) . pack('v', 8) . pack('v', 0) . pack('v', 0);
+        $lfh .= pack('V', $crc) . pack('V', $comp_size) . pack('V', $declared);
+        $lfh .= pack('v', strlen($name)) . pack('v', 0) . $name;
+        $blob = $lfh . $deflated;
+
+        $cfh  = "PK\x01\x02" . pack('v', 20) . pack('v', 20) . pack('v', 0) . pack('v', 8);
+        $cfh .= pack('v', 0) . pack('v', 0) . pack('V', $crc) . pack('V', $comp_size) . pack('V', $declared);
+        $cfh .= pack('v', strlen($name)) . pack('v', 0) . pack('v', 0) . pack('v', 0);
+        $cfh .= pack('v', 0) . pack('V', 0) . pack('V', 0) . $name;
+
+        $cd_offset = strlen($blob);
+        $blob .= $cfh;
+        $blob .= "PK\x05\x06" . pack('v', 0) . pack('v', 0) . pack('v', 1) . pack('v', 1);
+        $blob .= pack('V', strlen($cfh)) . pack('V', $cd_offset) . pack('v', 0);
+
+        $tmp = sys_get_temp_dir() . '/phpa-comp-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-comp-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $blob);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
      * simple test that checks that the given filenames and contents can be grepped from
      * the uncompressed zip stream
      *
