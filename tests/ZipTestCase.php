@@ -98,6 +98,202 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * A file ending right after the End-of-Central-Directory signature must fail cleanly.
+     */
+    public function testTruncatedCentralDirectoryRecord()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-eocd-' . md5(uniqid('', true)) . '.bin';
+        file_put_contents($tmp, "PK\x05\x06");
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $this->expectExceptionMessage('Could not read end of central directory record');
+            iterator_to_array($zip->yieldContents());
+        } finally {
+            try {
+                $zip->close();
+            } catch(\Exception $e) {
+                /* already errored */
+            }
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * Create a single entry ZIP archive with the given raw header values
+     *
+     * @param string $name the file name of the entry
+     * @param string $data the raw file data of the entry
+     * @param int $compression the compression method to declare
+     * @param int $compressed_size the compressed size to declare
+     * @param int $size the uncompressed size to declare
+     * @param int $crc the CRC32 checksum to declare
+     * @param int $header_offset the position of the local file header to declare
+     * @return string the binary content of the archive
+     */
+    protected function craftZip($name, $data, $compression, $compressed_size, $size, $crc = 0, $header_offset = 0)
+    {
+        $lfh  = "PK\x03\x04" . pack('v', 20) . pack('v', 0) . pack('v', $compression);
+        $lfh .= pack('v', 0) . pack('v', 0);
+        $lfh .= pack('V', $crc) . pack('V', $compressed_size) . pack('V', $size);
+        $lfh .= pack('v', strlen($name)) . pack('v', 0) . $name;
+        $blob = $lfh . $data;
+
+        $cfh  = "PK\x01\x02" . pack('v', 20) . pack('v', 20) . pack('v', 0) . pack('v', $compression);
+        $cfh .= pack('v', 0) . pack('v', 0);
+        $cfh .= pack('V', $crc) . pack('V', $compressed_size) . pack('V', $size);
+        $cfh .= pack('v', strlen($name)) . pack('v', 0) . pack('v', 0) . pack('v', 0);
+        $cfh .= pack('v', 0) . pack('V', 0) . pack('V', $header_offset) . $name;
+
+        $cd_offset = strlen($blob);
+        $blob .= $cfh;
+        $blob .= "PK\x05\x06" . pack('v', 0) . pack('v', 0) . pack('v', 1) . pack('v', 1);
+        $blob .= pack('V', strlen($cfh)) . pack('V', $cd_offset) . pack('v', 0);
+
+        return $blob;
+    }
+
+    /**
+     * A stored entry that declares more data than the archive contains must be rejected.
+     */
+    public function testStoredEntryExceedingArchiveSize()
+    {
+        $declared = 1048576; // 1 MiB claimed for a single byte of data
+
+        $tmp = sys_get_temp_dir() . '/phpa-stored-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-stored-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip('tiny.txt', 'A', 0, $declared, $declared));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * A deflated entry shorter than its declared uncompressed size must be rejected.
+     */
+    public function testCompressedEntrySmallerThanDeclaredSize()
+    {
+        $raw      = 'hello';
+        $deflated = gzdeflate($raw, 9);
+        $declared = 1048576; // 1 MiB claimed uncompressed size
+
+        $tmp = sys_get_temp_dir() . '/phpa-comp-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-comp-out-' . md5(uniqid('', true));
+        file_put_contents(
+            $tmp,
+            $this->craftZip('small.txt', $deflated, 8, strlen($deflated), $declared, crc32($raw))
+        );
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * An excluded entry is never read, so a broken header must not abort the extraction.
+     */
+    public function testBrokenEntryIsIgnoredWhenExcluded()
+    {
+        $declared = 1048576; // 1 MiB claimed for a single byte of data
+
+        $tmp = sys_get_temp_dir() . '/phpa-excluded-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-excluded-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip('tiny.txt', 'A', 0, $declared, $declared));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->assertCount(0, $zip->extract($out, '', '/^tiny\.txt$/'));
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * An entry using a compression method other than store or deflate must be rejected.
+     */
+    public function testUnsupportedCompressionMethod()
+    {
+        $data = 'pretend this is bzip2 data';
+
+        $tmp = sys_get_temp_dir() . '/phpa-method-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-method-out-' . md5(uniqid('', true));
+        // the declared size is smaller than the data, so no other check rejects the entry first
+        file_put_contents($tmp, $this->craftZip('bzip2.txt', $data, 12, strlen($data), 10, crc32($data)));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * A central directory outside of the archive must be rejected without leaking warnings.
+     */
+    public function testCentralDirectoryOutsideArchive()
+    {
+        // an end of central directory record claiming an entry far outside the file
+        $blob  = "PK\x05\x06" . pack('v', 0) . pack('v', 0) . pack('v', 1) . pack('v', 1);
+        $blob .= pack('V', 46) . pack('V', 0xFFFF0000) . pack('v', 0);
+
+        $tmp = sys_get_temp_dir() . '/phpa-cdir-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-cdir-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $blob);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $this->expectExceptionMessage('Could not read the central file header');
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * A local file header outside of the archive must be rejected without leaking warnings.
+     */
+    public function testLocalHeaderOutsideArchive()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-lfh-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-lfh-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip('tiny.txt', 'A', 0, 1, 1, crc32('A'), 0xFFFF0000));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $this->expectException(ArchiveCorruptedException::class);
+            $this->expectExceptionMessage('Could not read the local file header');
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
      * simple test that checks that the given filenames and contents can be grepped from
      * the uncompressed zip stream
      *
