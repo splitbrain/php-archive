@@ -1063,6 +1063,233 @@ class TarTestCase extends TestCase
     }
 
     /**
+     * An entry with less data than its declared size must be rejected and its partial file removed.
+     */
+    public function testTruncatedEntryExtract()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = sys_get_temp_dir() . '/phpa-truncated-out-' . md5(uniqid('', true));
+
+        $tar = new Tar();
+        $tar->open("$dir/truncated.tar");
+        try {
+            $tar->extract($out);
+            $this->fail('Extracting a truncated entry did not fail');
+        } catch (ArchiveCorruptedException $e) {
+            $this->assertFileNotExists("$out/truncated.txt");
+        } finally {
+            self::RDelete($out);
+        }
+    }
+
+    /**
+     * A failed extraction must close the archive
+     */
+    public function testExtractClosesArchiveOnException()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = sys_get_temp_dir() . '/phpa-truncated-out-' . md5(uniqid('', true));
+
+        $tar = new Tar();
+        $tar->open("$dir/truncated.tar");
+        try {
+            $tar->extract($out);
+        } catch (ArchiveCorruptedException $e) {
+            $this->expectException(ArchiveIOException::class);
+            $this->expectExceptionMessage('Can not read from a closed archive');
+            $tar->extract($out);
+        } finally {
+            self::RDelete($out);
+        }
+    }
+
+    /**
+     * Skipping an excluded entry with less data than its declared size must stop at the end of the archive.
+     */
+    public function testTruncatedEntrySkip()
+    {
+        $dir = $this->getDir() . '/tar';
+        $data = file_get_contents("$dir/truncated.tar");
+        $archives = array('tar' => $data);
+        if (extension_loaded('zlib')) {
+            $archives['tgz'] = gzencode($data);
+        }
+        if (extension_loaded('bz2')) {
+            $archives['tbz'] = bzcompress($data);
+        }
+
+        foreach ($archives as $ext => $content) {
+            $tmp = sys_get_temp_dir() . '/phpa-truncated-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-truncated-out-' . md5(uniqid('', true));
+            file_put_contents($tmp, $content);
+
+            $tar = new Tar();
+            $tar->open($tmp);
+            try {
+                $this->assertEquals(array(), $tar->extract($out, '', '/truncated/'), $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Create a tar archive with three files of ten bytes each
+     *
+     * @param string $file the path to save the archive to
+     */
+    protected function createLimitArchive($file)
+    {
+        $tar = new Tar();
+        $tar->create($file);
+        $tar->addData('one.txt', str_repeat('1', 10));
+        $tar->addData('two.txt', str_repeat('2', 10));
+        $tar->addData('three.txt', str_repeat('3', 10));
+        $tar->close();
+    }
+
+    /**
+     * Extraction must stop when reading the archive exceeds the size limit
+     */
+    public function testExtractionSizeLimit()
+    {
+        foreach ($this->extensions as $ext) {
+            $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+            $this->createLimitArchive($tmp);
+
+            // three header and data blocks plus two end blocks
+            $tar = new Tar();
+            $tar->setExtractionSizeLimit(4096);
+            $tar->open($tmp);
+            $this->assertCount(3, $tar->extract($out), $ext);
+            self::RDelete($out);
+
+            // ends after the header of the third file
+            $tar = new Tar();
+            $tar->setExtractionSizeLimit(2560);
+            $tar->open($tmp);
+            try {
+                $tar->extract($out);
+                $this->fail("Size limit was not enforced for $ext");
+            } catch (ArchiveLimitException $e) {
+                $this->assertFileExists("$out/two.txt", $ext);
+                $this->assertFileNotExists("$out/three.txt", $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Provide archive data that is read but never extracted
+     *
+     * @return array[] the uncompressed archive data and the exclude expression
+     */
+    public function provideUnextractedData()
+    {
+        $dir = $this->getDir() . '/tar';
+        return array(
+            'skipped entry' => array(file_get_contents("$dir/truncated.tar"), '/truncated/'),
+            'zero blocks' => array(str_repeat("\0", 1048576), ''),
+        );
+    }
+
+    /**
+     * Data that is read but never extracted must count toward the size limit
+     *
+     * @dataProvider provideUnextractedData
+     * @param string $data the uncompressed archive data
+     * @param string $exclude a regular expression of files to exclude
+     */
+    public function testExtractionSizeLimitCountsUnextractedData($data, $exclude)
+    {
+        $archives = array('tar' => $data);
+        if (extension_loaded('zlib')) {
+            $archives['tgz'] = gzencode($data);
+        }
+        if (extension_loaded('bz2')) {
+            $archives['tbz'] = bzcompress($data);
+        }
+
+        foreach ($archives as $ext => $content) {
+            $tmp = sys_get_temp_dir() . '/phpa-unextracted-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-unextracted-out-' . md5(uniqid('', true));
+            file_put_contents($tmp, $content);
+
+            $tar = new Tar();
+            $tar->setExtractionSizeLimit(65536);
+            $tar->open($tmp);
+            try {
+                $tar->extract($out, '', $exclude);
+                $this->fail("Size limit was not enforced for $ext");
+            } catch (ArchiveLimitException $e) {
+                $this->assertStringContainsString('Reading the archive exceeds', $e->getMessage(), $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the file limit, skipped entries do not count
+     */
+    public function testExtractionFileLimit()
+    {
+        foreach ($this->extensions as $ext) {
+            $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+            $this->createLimitArchive($tmp);
+
+            $tar = new Tar();
+            $tar->setExtractionFileLimit(2);
+            $tar->open($tmp);
+            $this->assertCount(2, $tar->extract($out, '', '/one/'), $ext);
+            self::RDelete($out);
+
+            $tar = new Tar();
+            $tar->setExtractionFileLimit(2);
+            $tar->open($tmp);
+            try {
+                $tar->extract($out);
+                $this->fail("File limit was not enforced for $ext");
+            } catch (ArchiveLimitException $e) {
+                $this->assertFileExists("$out/two.txt", $ext);
+                $this->assertFileNotExists("$out/three.txt", $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * A failed write must abort the extraction and remove the partial file
+     */
+    public function testExtractToFullDisk()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-full-' . md5(uniqid('', true)) . '.tar';
+        $out = vfsStream::url('home_root_path/out');
+        $this->createLimitArchive($tmp);
+        vfsStream::setQuota(15);
+
+        $tar = new Tar();
+        $tar->open($tmp);
+        try {
+            $tar->extract($out);
+            $this->fail('Extracting to a full disk did not fail');
+        } catch (ArchiveIOException $e) {
+            $this->assertStringEqualsFile("$out/one.txt", str_repeat('1', 10));
+            $this->assertFileNotExists("$out/two.txt");
+        } finally {
+            unlink($tmp);
+        }
+    }
+
+    /**
      * recursive rmdir()/unlink()
      *
      * @static

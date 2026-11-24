@@ -177,6 +177,157 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Sizes in the local file header that differ from the central directory must be ignored.
+     */
+    public function testLocalHeaderSizesIgnored()
+    {
+        $raw      = 'hello';
+        $deflated = gzdeflate($raw, 9);
+
+        $blob = $this->craftZip('local.txt', $deflated, 8, strlen($deflated), strlen($raw), crc32($raw));
+        $blob = substr_replace($blob, pack('VV', 0x7FFFFFFF, 0x7FFFFFFF), 18, 8); // local sizes
+
+        $tmp = sys_get_temp_dir() . '/phpa-local-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-local-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $blob);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->assertStringEqualsFile("$out/local.txt", $raw);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * Create a zip archive with three files of ten bytes each
+     *
+     * @param string $file the path to save the archive to
+     * @param int $level the compression level, 0 stores the files
+     */
+    protected function createLimitArchive($file, $level)
+    {
+        $zip = new Zip();
+        $zip->setCompression($level);
+        $zip->create($file);
+        $zip->addData('one.txt', str_repeat('1', 10));
+        $zip->addData('two.txt', str_repeat('2', 10));
+        $zip->addData('three.txt', str_repeat('3', 10));
+        $zip->close();
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the size limit
+     */
+    public function testExtractionSizeLimit()
+    {
+        foreach (array(0, 9) as $level) {
+            $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.zip';
+            $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+            $this->createLimitArchive($tmp, $level);
+
+            $zip = new Zip();
+            $zip->setExtractionSizeLimit(30);
+            $zip->open($tmp);
+            $this->assertCount(3, $zip->extract($out), "level $level");
+            self::RDelete($out);
+
+            $zip = new Zip();
+            $zip->setExtractionSizeLimit(25);
+            $zip->open($tmp);
+            try {
+                $zip->extract($out);
+                $this->fail("Size limit was not enforced for level $level");
+            } catch (ArchiveLimitException $e) {
+                $this->assertFileExists("$out/two.txt", "level $level");
+                $this->assertFileNotExists("$out/three.txt", "level $level");
+            } finally {
+                self::RDelete($out);
+                @unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the file limit, skipped entries do not count
+     */
+    public function testExtractionFileLimit()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+        $this->createLimitArchive($tmp, 9);
+
+        $zip = new Zip();
+        $zip->setExtractionFileLimit(2);
+        $zip->open($tmp);
+        $this->assertCount(2, $zip->extract($out, '', '/one/'));
+        self::RDelete($out);
+
+        $zip = new Zip();
+        $zip->setExtractionFileLimit(2);
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->fail('File limit was not enforced');
+        } catch (ArchiveLimitException $e) {
+            $this->assertFileExists("$out/two.txt");
+            $this->assertFileNotExists("$out/three.txt");
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * A failed write must abort the extraction and remove the partial file
+     */
+    public function testExtractToFullDisk()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-full-' . md5(uniqid('', true)) . '.zip';
+        $out = vfsStream::url('home_root_path/out');
+        $this->createLimitArchive($tmp, 9);
+        vfsStream::setQuota(15);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->fail('Extracting to a full disk did not fail');
+        } catch (ArchiveIOException $e) {
+            $this->assertStringEqualsFile("$out/one.txt", str_repeat('1', 10));
+            $this->assertFileNotExists("$out/two.txt");
+        } finally {
+            unlink($tmp);
+        }
+    }
+
+    /**
+     * A failed extraction must close the archive
+     */
+    public function testExtractClosesArchiveOnException()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-closed-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-closed-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip('tiny.txt', 'A', 0, 1048576, 1048576));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+        } catch (ArchiveCorruptedException $e) {
+            $this->expectException(ArchiveIOException::class);
+            $this->expectExceptionMessage('Can not read from a closed archive');
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            unlink($tmp);
+        }
+    }
+
+    /**
      * A deflated entry shorter than its declared uncompressed size must be rejected.
      */
     public function testCompressedEntrySmallerThanDeclaredSize()
@@ -200,6 +351,52 @@ class ZipTestCase extends TestCase
         } finally {
             self::RDelete($out);
             @unlink($tmp);
+        }
+    }
+
+    /**
+     * Provide entries whose data does not match their headers
+     *
+     * @return array[] name, raw data, compression method, declared size and declared CRC
+     */
+    public function provideBrokenEntryData()
+    {
+        $deflated = gzdeflate('hello world', 9);
+
+        return array(
+            'larger than declared' => array('large.txt', $deflated, 8, 5, crc32('hello world')),
+            'wrong CRC of deflated data' => array('crc.txt', $deflated, 8, 11, 12345),
+            'wrong CRC of stored data' => array('crc.txt', 'hello', 0, 5, 12345),
+            'invalid deflate data' => array('invalid.txt', "\xff\xff\xff\xff", 8, 5, crc32('hello')),
+        );
+    }
+
+    /**
+     * Data that does not match the header must be rejected without leaving a file behind.
+     *
+     * @dataProvider provideBrokenEntryData
+     * @param string $name the file name of the entry
+     * @param string $data the raw file data of the entry
+     * @param int $compression the compression method to declare
+     * @param int $size the uncompressed size to declare
+     * @param int $crc the CRC32 checksum to declare
+     */
+    public function testBrokenEntryData($name, $data, $compression, $size, $crc)
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-broken-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-broken-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip($name, $data, $compression, strlen($data), $size, $crc));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->fail('Extracting broken entry data did not fail');
+        } catch (ArchiveCorruptedException $e) {
+            $this->assertFileNotExists("$out/$name");
+        } finally {
+            self::RDelete($out);
+            unlink($tmp);
         }
     }
 
@@ -972,6 +1169,20 @@ class ZipTestCase extends TestCase
 
         $zip->open($file);
         $zip->close();
+        $zip->extract($out);
+    }
+
+    public function testZipExtractWithInvalidOutDir()
+    {
+        $this->expectException(ArchiveIOException::class);
+        $this->expectExceptionMessage('Could not create directory');
+        $dir = $this->getDir() . '/zip';
+        // Fails on Linux and Windows.
+        $out = '/root/invalid_out_dir:';
+
+        $zip = new Zip();
+
+        $zip->open("$dir/test.zip");
         $zip->extract($out);
     }
 
