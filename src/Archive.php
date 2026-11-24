@@ -13,6 +13,12 @@ abstract class Archive
     /** @var callable */
     protected $callback;
 
+    /** @var int maximum number of bytes extract() may write, 0 for no limit */
+    protected $extractionSizeLimit = 0;
+
+    /** @var int maximum number of entries extract() may create, 0 for no limit */
+    protected $extractionFileLimit = 0;
+
     /**
      * Set the compression level and type
      *
@@ -64,6 +70,7 @@ abstract class Archive
      * @param string     $exclude a regular expression of files to exclude
      * @param string     $include a regular expression of files to include
      * @throws ArchiveIOException
+     * @throws ArchiveLimitException
      * @return array
      */
     abstract public function extract($outdir, $strip = '', $exclude = '', $include = '');
@@ -131,5 +138,54 @@ abstract class Archive
     public function setCallback($callback)
     {
         $this->callback = $callback;
+    }
+
+    /**
+     * Set the maximum total size of all files written by extract()
+     *
+     * The extraction is aborted with an ArchiveLimitException before an entry would exceed the limit. Files
+     * extracted up to that point are not removed.
+     *
+     * @param int $bytes the maximum number of bytes, 0 for no limit
+     */
+    public function setExtractionSizeLimit($bytes)
+    {
+        $this->extractionSizeLimit = (int) $bytes;
+    }
+
+    /**
+     * Set the maximum number of entries created by extract()
+     *
+     * Files and directories count as entries, skipped entries do not. The extraction is aborted with an
+     * ArchiveLimitException before an entry would exceed the limit. Files extracted up to that point are not
+     * removed.
+     *
+     * @param int $files the maximum number of entries, 0 for no limit
+     */
+    public function setExtractionFileLimit($files)
+    {
+        $this->extractionFileLimit = (int) $files;
+    }
+
+    /**
+     * Check that extracting the next entry stays within the configured limits
+     *
+     * @param string $name the path of the entry, used in the error message
+     * @param int $files the number of entries including this one
+     * @param int $bytes the number of bytes written including this entry
+     * @throws ArchiveLimitException
+     */
+    protected function checkExtractionLimits($name, $files, $bytes)
+    {
+        if ($this->extractionFileLimit && $files > $this->extractionFileLimit) {
+            throw new ArchiveLimitException(
+                'Extracting '.$name.' exceeds the limit of '.$this->extractionFileLimit.' entries'
+            );
+        }
+        if ($this->extractionSizeLimit && $bytes > $this->extractionSizeLimit) {
+            throw new ArchiveLimitException(
+                'Extracting '.$name.' exceeds the limit of '.$this->extractionSizeLimit.' bytes'
+            );
+        }
     }
 }

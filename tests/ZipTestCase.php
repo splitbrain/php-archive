@@ -203,6 +203,85 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Create a zip archive with three files of ten bytes each
+     *
+     * @param string $file the path to save the archive to
+     * @param int $level the compression level, 0 stores the files
+     */
+    protected function createLimitArchive($file, $level)
+    {
+        $zip = new Zip();
+        $zip->setCompression($level);
+        $zip->create($file);
+        $zip->addData('one.txt', str_repeat('1', 10));
+        $zip->addData('two.txt', str_repeat('2', 10));
+        $zip->addData('three.txt', str_repeat('3', 10));
+        $zip->close();
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the size limit
+     */
+    public function testExtractionSizeLimit()
+    {
+        foreach (array(0, 9) as $level) {
+            $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.zip';
+            $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+            $this->createLimitArchive($tmp, $level);
+
+            $zip = new Zip();
+            $zip->setExtractionSizeLimit(30);
+            $zip->open($tmp);
+            $this->assertCount(3, $zip->extract($out), "level $level");
+            self::RDelete($out);
+
+            $zip = new Zip();
+            $zip->setExtractionSizeLimit(25);
+            $zip->open($tmp);
+            try {
+                $zip->extract($out);
+                $this->fail("Size limit was not enforced for level $level");
+            } catch (ArchiveLimitException $e) {
+                $this->assertFileExists("$out/two.txt", "level $level");
+                $this->assertFileNotExists("$out/three.txt", "level $level");
+            } finally {
+                self::RDelete($out);
+                @unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the file limit, skipped entries do not count
+     */
+    public function testExtractionFileLimit()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+        $this->createLimitArchive($tmp, 9);
+
+        $zip = new Zip();
+        $zip->setExtractionFileLimit(2);
+        $zip->open($tmp);
+        $this->assertCount(2, $zip->extract($out, '', '/one/'));
+        self::RDelete($out);
+
+        $zip = new Zip();
+        $zip->setExtractionFileLimit(2);
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->fail('File limit was not enforced');
+        } catch (ArchiveLimitException $e) {
+            $this->assertFileExists("$out/two.txt");
+            $this->assertFileNotExists("$out/three.txt");
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
      * A deflated entry shorter than its declared uncompressed size must be rejected.
      */
     public function testCompressedEntrySmallerThanDeclaredSize()

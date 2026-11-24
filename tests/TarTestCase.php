@@ -1114,6 +1114,85 @@ class TarTestCase extends TestCase
     }
 
     /**
+     * Create a tar archive with three files of ten bytes each
+     *
+     * @param string $file the path to save the archive to
+     */
+    protected function createLimitArchive($file)
+    {
+        $tar = new Tar();
+        $tar->create($file);
+        $tar->addData('one.txt', str_repeat('1', 10));
+        $tar->addData('two.txt', str_repeat('2', 10));
+        $tar->addData('three.txt', str_repeat('3', 10));
+        $tar->close();
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the size limit
+     */
+    public function testExtractionSizeLimit()
+    {
+        foreach ($this->extensions as $ext) {
+            $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+            $this->createLimitArchive($tmp);
+
+            $tar = new Tar();
+            $tar->setExtractionSizeLimit(30);
+            $tar->open($tmp);
+            $this->assertCount(3, $tar->extract($out), $ext);
+            self::RDelete($out);
+
+            $tar = new Tar();
+            $tar->setExtractionSizeLimit(25);
+            $tar->open($tmp);
+            try {
+                $tar->extract($out);
+                $this->fail("Size limit was not enforced for $ext");
+            } catch (ArchiveLimitException $e) {
+                $this->assertFileExists("$out/two.txt", $ext);
+                $this->assertFileNotExists("$out/three.txt", $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Extraction must stop before the entry that exceeds the file limit, skipped entries do not count
+     */
+    public function testExtractionFileLimit()
+    {
+        foreach ($this->extensions as $ext) {
+            $tmp = sys_get_temp_dir() . '/phpa-limit-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
+            $this->createLimitArchive($tmp);
+
+            $tar = new Tar();
+            $tar->setExtractionFileLimit(2);
+            $tar->open($tmp);
+            $this->assertCount(2, $tar->extract($out, '', '/one/'), $ext);
+            self::RDelete($out);
+
+            $tar = new Tar();
+            $tar->setExtractionFileLimit(2);
+            $tar->open($tmp);
+            try {
+                $tar->extract($out);
+                $this->fail("File limit was not enforced for $ext");
+            } catch (ArchiveLimitException $e) {
+                $this->assertFileExists("$out/two.txt", $ext);
+                $this->assertFileNotExists("$out/three.txt", $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
      * recursive rmdir()/unlink()
      *
      * @static

@@ -208,6 +208,7 @@ class Tar extends Archive
      * @param string $include a regular expression of files to include
      * @throws ArchiveIOException
      * @throws ArchiveCorruptedException
+     * @throws ArchiveLimitException
      * @return FileInfo[]
      */
     public function extract($outdir, $strip = '', $exclude = '', $include = '')
@@ -223,6 +224,7 @@ class Tar extends Archive
         }
 
         $extracted = array();
+        $written   = 0;
         while ($dat = $this->readbytes(512)) {
             // read the file header
             $header = $this->parseHeader($dat);
@@ -239,6 +241,11 @@ class Tar extends Archive
                 $this->skipbytes(ceil($header['size'] / 512) * 512);
                 continue;
             }
+
+            if (!$fileinfo->getIsdir()) {
+                $written += $header['size'];
+            }
+            $this->checkExtractionLimits($fileinfo->getPath(), count($extracted) + 1, $written);
 
             // create output directory
             $output    = $outdir.'/'.$fileinfo->getPath();

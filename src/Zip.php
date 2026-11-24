@@ -145,6 +145,7 @@ class Zip extends Archive
      * @param string     $include a regular expression of files to include
      * @throws ArchiveIOException
      * @throws ArchiveCorruptedException
+     * @throws ArchiveLimitException
      * @return FileInfo[]
      */
     public function extract($outdir, $strip = '', $exclude = '', $include = '')
@@ -157,6 +158,7 @@ class Zip extends Archive
         @mkdir($outdir, 0777, true);
 
         $extracted = array();
+        $written   = 0;
 
         $cdir      = $this->readCentralDir();
         $pos_entry = $cdir['offset']; // begin of the central file directory
@@ -178,6 +180,12 @@ class Zip extends Archive
             if (!strlen($fileinfo->getPath()) || !$fileinfo->matchExpression($include, $exclude)) {
                 continue;
             }
+
+            // stored entries are copied as they are, all others are written with their uncompressed size
+            if (!$fileinfo->getIsdir()) {
+                $written += ($header['compression'] == 0) ? $header['compressed_size'] : $header['size'];
+            }
+            $this->checkExtractionLimits($fileinfo->getPath(), count($extracted) + 1, $written);
 
             $extracted[] = $fileinfo;
 
