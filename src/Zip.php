@@ -15,7 +15,6 @@ namespace splitbrain\PHPArchive;
  * converted from CP437 otherwise, which is the encoding the format prescribes for unflagged names.
  *
  * @author  Andreas Gohr <andi@splitbrain.org>
- * @package splitbrain\PHPArchive
  * @license MIT
  */
 class Zip extends Archive

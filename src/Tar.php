@@ -16,7 +16,6 @@ namespace splitbrain\PHPArchive;
  * encoding and can not be recognized as such.
  *
  * @author  Andreas Gohr <andi@splitbrain.org>
- * @package splitbrain\PHPArchive
  * @license MIT
  */
 class Tar extends Archive
