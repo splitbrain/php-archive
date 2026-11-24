@@ -332,6 +332,52 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Provide entries whose data does not match their headers
+     *
+     * @return array[] name, raw data, compression method, declared size and declared CRC
+     */
+    public function provideBrokenEntryData()
+    {
+        $deflated = gzdeflate('hello world', 9);
+
+        return array(
+            'larger than declared' => array('large.txt', $deflated, 8, 5, crc32('hello world')),
+            'wrong CRC of deflated data' => array('crc.txt', $deflated, 8, 11, 12345),
+            'wrong CRC of stored data' => array('crc.txt', 'hello', 0, 5, 12345),
+            'invalid deflate data' => array('invalid.txt', "\xff\xff\xff\xff", 8, 5, crc32('hello')),
+        );
+    }
+
+    /**
+     * Data that does not match the header must be rejected without leaving a file behind.
+     *
+     * @dataProvider provideBrokenEntryData
+     * @param string $name the file name of the entry
+     * @param string $data the raw file data of the entry
+     * @param int $compression the compression method to declare
+     * @param int $size the uncompressed size to declare
+     * @param int $crc the CRC32 checksum to declare
+     */
+    public function testBrokenEntryData($name, $data, $compression, $size, $crc)
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-broken-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-broken-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip($name, $data, $compression, strlen($data), $size, $crc));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->fail('Extracting broken entry data did not fail');
+        } catch (ArchiveCorruptedException $e) {
+            $this->assertFileNotExists("$out/$name");
+        } finally {
+            self::RDelete($out);
+            unlink($tmp);
+        }
+    }
+
+    /**
      * An excluded entry is never read, so a broken header must not abort the extraction.
      */
     public function testBrokenEntryIsIgnoredWhenExcluded()

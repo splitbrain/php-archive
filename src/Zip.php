@@ -506,7 +506,39 @@ class Zip extends Archive
             return;
         }
 
-        // entry data always lies before the central directory in a valid archive
+        $this->checkEntryData($header, $cdir_offset);
+
+        $fp = @fopen($output, 'wb');
+        if (!$fp) {
+            throw new ArchiveIOException('Could not open file for writing: '.$output);
+        }
+        try {
+            $this->copyEntryData($header, $fp);
+        } catch (\Exception $e) {
+            fclose($fp);
+            @unlink($output);
+            throw $e;
+        }
+        fclose($fp);
+
+        @touch($output, $fileinfo->getMtime());
+        if ($header['mode']) {
+            // only archives that stored a mode get one applied
+            @chmod($output, $header['mode'] & 07777);
+        }
+    }
+
+    /**
+     * Check that the data of an entry can be extracted
+     *
+     * Expects the file pointer at the start of the entry's data.
+     *
+     * @param array $header the merged central and local file header of the entry
+     * @param int $cdir_offset the position of the central directory, entry data must lie before it
+     * @throws ArchiveCorruptedException when the data lies outside the archive or uses an unsupported method
+     */
+    protected function checkEntryData($header, $cdir_offset)
+    {
         if (ftell($this->fh) + $header['compressed_size'] > $cdir_offset) {
             throw new ArchiveCorruptedException(
                 'Compressed data of '.$header['stored_filename'].' does not fit into the archive'
@@ -520,97 +552,65 @@ class Zip extends Archive
                 $header['stored_filename'].' is not supported'
             );
         }
+    }
 
-        // compressed files are written to temporary .gz file first
-        if ($header['compression'] == 0) {
-            $extractto = $output;
-        } else {
-            $extractto = $output.'.gz';
+    /**
+     * Copy the data of an entry to a file, decompressing deflated data
+     *
+     * Expects the file pointer at the start of the entry's data.
+     *
+     * @param array $header the merged central and local file header of the entry
+     * @param resource $fp the file to write to
+     * @throws ArchiveIOException when zlib support is missing
+     * @throws ArchiveCorruptedException when the data does not match the declared size or CRC
+     */
+    protected function copyEntryData($header, $fp)
+    {
+        $inflate = null;
+        if ($header['compression'] == 8) {
+            if (!function_exists('inflate_init')) {
+                throw new ArchiveIOException('Failed file extracting. zlib support missing?');
+            }
+            $inflate = inflate_init(ZLIB_ENCODING_RAW);
         }
 
-        // open file for writing
-        $fp = @fopen($extractto, "wb");
-        if (!$fp) {
-            throw new ArchiveIOException('Could not open file for writing: '.$extractto);
-        }
-
-        // prepend compression header
-        if ($header['compression'] != 0) {
-            $binary_data = pack(
-                'va1a1Va1a1',
-                0x8b1f,
-                chr($header['compression']),
-                chr(0x00),
-                time(),
-                chr(0x00),
-                chr(3)
-            );
-            fwrite($fp, $binary_data, 10);
-        }
-
-        // read the file and store it on disk
-        $size = $header['compressed_size'];
+        $crc     = hash_init('crc32b');
+        $written = 0;
+        $size    = $header['compressed_size'];
         while ($size != 0) {
             $read_size = ($size < 2048 ? $size : 2048);
             $buffer    = fread($this->fh, $read_size);
             if ($buffer === false || strlen($buffer) !== $read_size) {
-                fclose($fp);
-                @unlink($extractto);
                 throw new ArchiveCorruptedException(
                     'Could not read the expected data for '.$header['stored_filename']
                 );
             }
-            fwrite($fp, $buffer, $read_size);
             $size -= $read_size;
-        }
 
-        // finalize compressed file
-        if ($header['compression'] != 0) {
-            $binary_data = pack('VV', $header['crc'], $header['size']);
-            fwrite($fp, $binary_data, 8);
-        }
-
-        // close file
-        fclose($fp);
-
-        // unpack compressed file
-        if ($header['compression'] != 0) {
-            $gzp = @gzopen($extractto, 'rb');
-            if (!$gzp) {
-                @unlink($extractto);
-                throw new ArchiveIOException('Failed file extracting. gzip support missing?');
-            }
-            $fp = @fopen($output, 'wb');
-            if (!$fp) {
-                throw new ArchiveIOException('Could not open file for writing: '.$extractto);
-            }
-
-            $size = $header['size'];
-            while ($size != 0) {
-                $read_size = ($size < 2048 ? $size : 2048);
-                $buffer    = gzread($gzp, $read_size);
-                $got       = ($buffer === false) ? 0 : strlen($buffer);
-                if ($got === 0) {
-                    fclose($fp);
-                    gzclose($gzp);
-                    @unlink($extractto);
-                    @unlink($output);
-                    throw new ArchiveCorruptedException(
-                        $header['stored_filename'].' is smaller than its declared uncompressed size'
-                    );
+            if ($inflate) {
+                $buffer = @inflate_add($inflate, $buffer);
+                if ($buffer === false) {
+                    throw new ArchiveCorruptedException('Could not decompress '.$header['stored_filename']);
                 }
-                @fwrite($fp, $buffer, $got);
-                $size -= $got;
             }
-            fclose($fp);
-            gzclose($gzp);
-            unlink($extractto); // remove temporary gz file
+
+            $written += strlen($buffer);
+            if ($written > $header['size']) {
+                throw new ArchiveCorruptedException(
+                    $header['stored_filename'].' is larger than its declared uncompressed size'
+                );
+            }
+            hash_update($crc, $buffer);
+            fwrite($fp, $buffer);
         }
 
-        @touch($output, $fileinfo->getMtime());
-        if ($header['mode']) {
-            // only archives that stored a mode get one applied
-            @chmod($output, $header['mode'] & 07777);
+        if ($written != $header['size']) {
+            throw new ArchiveCorruptedException(
+                $header['stored_filename'].' is smaller than its declared uncompressed size'
+            );
+        }
+        if (hash_final($crc) !== sprintf('%08x', $header['crc'])) {
+            throw new ArchiveCorruptedException('CRC check failed for '.$header['stored_filename']);
         }
     }
 
