@@ -561,7 +561,7 @@ class Zip extends Archive
      *
      * @param array $header the merged central and local file header of the entry
      * @param resource $fp the file to write to
-     * @throws ArchiveIOException when zlib support is missing
+     * @throws ArchiveIOException when zlib support is missing or the file cannot be written
      * @throws ArchiveCorruptedException when the data does not match the declared size or CRC
      */
     protected function copyEntryData($header, $fp)
@@ -601,7 +601,9 @@ class Zip extends Archive
                 );
             }
             hash_update($crc, $buffer);
-            fwrite($fp, $buffer);
+            if (@fwrite($fp, $buffer) !== strlen($buffer)) {
+                throw new ArchiveIOException('Could not write the data of '.$header['stored_filename']);
+            }
         }
 
         if ($written != $header['size']) {

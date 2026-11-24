@@ -282,6 +282,29 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * A failed write must abort the extraction and remove the partial file
+     */
+    public function testExtractToFullDisk()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-full-' . md5(uniqid('', true)) . '.zip';
+        $out = vfsStream::url('home_root_path/out');
+        $this->createLimitArchive($tmp, 9);
+        vfsStream::setQuota(15);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->fail('Extracting to a full disk did not fail');
+        } catch (ArchiveIOException $e) {
+            $this->assertStringEqualsFile("$out/one.txt", str_repeat('1', 10));
+            $this->assertFileNotExists("$out/two.txt");
+        } finally {
+            unlink($tmp);
+        }
+    }
+
+    /**
      * A failed extraction must close the archive
      */
     public function testExtractClosesArchiveOnException()

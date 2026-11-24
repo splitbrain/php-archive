@@ -507,21 +507,26 @@ class Tar extends Archive
             throw new ArchiveIOException('Could not open file for writing: '.$output);
         }
 
-        $size = $header['size'];
-        while ($size > 0) {
-            $read_size = min($size, 512);
-            $buffer    = $this->readbytes(512);
-            if (strlen($buffer) < $read_size) {
-                fclose($fp);
-                @unlink($output);
-                throw new ArchiveCorruptedException(
-                    'Could not read the expected data for '.$header['filename']
-                );
+        try {
+            $size = $header['size'];
+            while ($size > 0) {
+                $read_size = min($size, 512);
+                $buffer    = $this->readbytes(512);
+                if (strlen($buffer) < $read_size) {
+                    throw new ArchiveCorruptedException(
+                        'Could not read the expected data for '.$header['filename']
+                    );
+                }
+                if (@fwrite($fp, $buffer, $read_size) !== $read_size) {
+                    throw new ArchiveIOException('Could not write to file: '.$output);
+                }
+                $size -= $read_size;
             }
-            fwrite($fp, $buffer, $read_size);
-            $size -= $read_size;
+        } catch (\Exception $e) {
+            fclose($fp);
+            @unlink($output);
+            throw $e;
         }
-
         fclose($fp);
         @touch($output, $fileinfo->getMtime());
         @chmod($output, $fileinfo->getMode());
