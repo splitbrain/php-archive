@@ -144,7 +144,8 @@ abstract class Archive
      * Set the maximum total size of all files written by extract()
      *
      * The extraction is aborted with an ArchiveLimitException before an entry would exceed the limit. Files
-     * extracted up to that point are not removed.
+     * extracted up to that point are not removed. For Tar archives, the limit also applies to all data read from the
+     * uncompressed archive, including headers and skipped entries.
      *
      * @param int $bytes the maximum number of bytes, 0 for no limit
      */

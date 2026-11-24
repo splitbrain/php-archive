@@ -1150,7 +1150,7 @@ class TarTestCase extends TestCase
     }
 
     /**
-     * Extraction must stop before the entry that exceeds the size limit
+     * Extraction must stop when reading the archive exceeds the size limit
      */
     public function testExtractionSizeLimit()
     {
@@ -1159,14 +1159,16 @@ class TarTestCase extends TestCase
             $out = sys_get_temp_dir() . '/phpa-limit-out-' . md5(uniqid('', true));
             $this->createLimitArchive($tmp);
 
+            // three header and data blocks plus two end blocks
             $tar = new Tar();
-            $tar->setExtractionSizeLimit(30);
+            $tar->setExtractionSizeLimit(4096);
             $tar->open($tmp);
             $this->assertCount(3, $tar->extract($out), $ext);
             self::RDelete($out);
 
+            // ends after the header of the third file
             $tar = new Tar();
-            $tar->setExtractionSizeLimit(25);
+            $tar->setExtractionSizeLimit(2560);
             $tar->open($tmp);
             try {
                 $tar->extract($out);
@@ -1174,6 +1176,57 @@ class TarTestCase extends TestCase
             } catch (ArchiveLimitException $e) {
                 $this->assertFileExists("$out/two.txt", $ext);
                 $this->assertFileNotExists("$out/three.txt", $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
+     * Provide archive data that is read but never extracted
+     *
+     * @return array[] the uncompressed archive data and the exclude expression
+     */
+    public function provideUnextractedData()
+    {
+        $dir = $this->getDir() . '/tar';
+        return array(
+            'skipped entry' => array(file_get_contents("$dir/truncated.tar"), '/truncated/'),
+            'zero blocks' => array(str_repeat("\0", 1048576), ''),
+        );
+    }
+
+    /**
+     * Data that is read but never extracted must count toward the size limit
+     *
+     * @dataProvider provideUnextractedData
+     * @param string $data the uncompressed archive data
+     * @param string $exclude a regular expression of files to exclude
+     */
+    public function testExtractionSizeLimitCountsUnextractedData($data, $exclude)
+    {
+        $archives = array('tar' => $data);
+        if (extension_loaded('zlib')) {
+            $archives['tgz'] = gzencode($data);
+        }
+        if (extension_loaded('bz2')) {
+            $archives['tbz'] = bzcompress($data);
+        }
+
+        foreach ($archives as $ext => $content) {
+            $tmp = sys_get_temp_dir() . '/phpa-unextracted-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-unextracted-out-' . md5(uniqid('', true));
+            file_put_contents($tmp, $content);
+
+            $tar = new Tar();
+            $tar->setExtractionSizeLimit(65536);
+            $tar->open($tmp);
+            try {
+                $tar->extract($out, '', $exclude);
+                $this->fail("Size limit was not enforced for $ext");
+            } catch (ArchiveLimitException $e) {
+                $this->assertStringContainsString('Reading the archive exceeds', $e->getMessage(), $ext);
             } finally {
                 self::RDelete($out);
                 unlink($tmp);

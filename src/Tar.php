@@ -55,6 +55,9 @@ class Tar extends Archive
     protected $skipUntil = 0;
     protected $paxGlobal = array();
 
+    /** @var int maximum position extract() may read to in the uncompressed archive, 0 for no limit */
+    protected $readLimit = 0;
+
     /**
      * Sets the compression to use
      *
@@ -221,6 +224,7 @@ class Tar extends Archive
         $written   = 0;
 
         try {
+            $this->readLimit = $this->extractionSizeLimit;
             $outdir = $this->createOutputDirectory($outdir);
 
             while ($dat = $this->readbytes(512)) {
@@ -253,6 +257,7 @@ class Tar extends Archive
                 $extracted[] = $fileinfo;
             }
         } finally {
+            $this->readLimit = 0;
             $this->close();
         }
 
@@ -537,6 +542,7 @@ class Tar extends Archive
      *
      * @param int $length bytes to read
      * @return string
+     * @throws ArchiveLimitException
      */
     protected function readbytes($length)
     {
@@ -548,6 +554,7 @@ class Tar extends Archive
             $ret = @fread($this->fh, $length);
         }
         $this->position += strlen($ret);
+        $this->checkReadLimit($this->position);
         return $ret;
     }
 
@@ -582,9 +589,13 @@ class Tar extends Archive
      * This is basically a wrapper around seek() (and a workaround for bzip2)
      *
      * @param int $bytes seek to this position
+     * @throws ArchiveLimitException
      */
     protected function skipbytes($bytes)
     {
+        $this->checkReadLimit($this->position + $bytes);
+        $this->position += $bytes;
+
         if ($this->comptype === Archive::COMPRESS_GZIP) {
             @gzseek($this->fh, $bytes, SEEK_CUR);
         } elseif ($this->comptype === Archive::COMPRESS_BZIP) {
@@ -600,7 +611,21 @@ class Tar extends Archive
         } else {
             @fseek($this->fh, $bytes, SEEK_CUR);
         }
-        $this->position += $bytes;
+    }
+
+    /**
+     * Check that extract() stays within its size limit when reading up to the given position
+     *
+     * @param int $position the position in the uncompressed archive
+     * @throws ArchiveLimitException
+     */
+    protected function checkReadLimit($position)
+    {
+        if ($this->readLimit && $position > $this->readLimit) {
+            throw new ArchiveLimitException(
+                'Reading the archive exceeds the limit of '.$this->readLimit.' bytes'
+            );
+        }
     }
 
     /**
