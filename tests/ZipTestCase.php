@@ -177,6 +177,32 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * Sizes in the local file header that differ from the central directory must be ignored.
+     */
+    public function testLocalHeaderSizesIgnored()
+    {
+        $raw      = 'hello';
+        $deflated = gzdeflate($raw, 9);
+
+        $blob = $this->craftZip('local.txt', $deflated, 8, strlen($deflated), strlen($raw), crc32($raw));
+        $blob = substr_replace($blob, pack('VV', 0x7FFFFFFF, 0x7FFFFFFF), 18, 8); // local sizes
+
+        $tmp = sys_get_temp_dir() . '/phpa-local-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-local-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $blob);
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+            $this->assertStringEqualsFile("$out/local.txt", $raw);
+        } finally {
+            self::RDelete($out);
+            @unlink($tmp);
+        }
+    }
+
+    /**
      * A deflated entry shorter than its declared uncompressed size must be rejected.
      */
     public function testCompressedEntrySmallerThanDeclaredSize()

@@ -254,12 +254,19 @@ class Tar extends Archive
                     throw new ArchiveIOException('Could not open file for writing: '.$output);
                 }
 
-                $size = floor($header['size'] / 512);
-                for ($i = 0; $i < $size; $i++) {
-                    fwrite($fp, $this->readbytes(512), 512);
-                }
-                if (($header['size'] % 512) != 0) {
-                    fwrite($fp, $this->readbytes(512), $header['size'] % 512);
+                $size = $header['size'];
+                while ($size > 0) {
+                    $read_size = min($size, 512);
+                    $buffer    = $this->readbytes(512);
+                    if (strlen($buffer) < $read_size) {
+                        fclose($fp);
+                        @unlink($output);
+                        throw new ArchiveCorruptedException(
+                            'Could not read the expected data for '.$header['filename']
+                        );
+                    }
+                    fwrite($fp, $buffer, $read_size);
+                    $size -= $read_size;
                 }
 
                 fclose($fp);
@@ -562,7 +569,9 @@ class Tar extends Archive
             // bzread allows to read a max of 8kb at once
             while($bytes) {
                 $toread = min(8192, $bytes);
-                @bzread($this->fh, $toread);
+                if (!strlen((string) @bzread($this->fh, $toread))) {
+                    break; // end of file
+                }
                 $bytes -= $toread;
             }
         } else {

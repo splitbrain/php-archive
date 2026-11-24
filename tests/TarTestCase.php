@@ -1063,6 +1063,57 @@ class TarTestCase extends TestCase
     }
 
     /**
+     * An entry with less data than its declared size must be rejected and its partial file removed.
+     */
+    public function testTruncatedEntryExtract()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = sys_get_temp_dir() . '/phpa-truncated-out-' . md5(uniqid('', true));
+
+        $tar = new Tar();
+        $tar->open("$dir/truncated.tar");
+        try {
+            $tar->extract($out);
+            $this->fail('Extracting a truncated entry did not fail');
+        } catch (ArchiveCorruptedException $e) {
+            $this->assertFileNotExists("$out/truncated.txt");
+        } finally {
+            self::RDelete($out);
+        }
+    }
+
+    /**
+     * Skipping an excluded entry with less data than its declared size must stop at the end of the archive.
+     */
+    public function testTruncatedEntrySkip()
+    {
+        $dir = $this->getDir() . '/tar';
+        $data = file_get_contents("$dir/truncated.tar");
+        $archives = array('tar' => $data);
+        if (extension_loaded('zlib')) {
+            $archives['tgz'] = gzencode($data);
+        }
+        if (extension_loaded('bz2')) {
+            $archives['tbz'] = bzcompress($data);
+        }
+
+        foreach ($archives as $ext => $content) {
+            $tmp = sys_get_temp_dir() . '/phpa-truncated-' . md5(uniqid('', true)) . '.' . $ext;
+            $out = sys_get_temp_dir() . '/phpa-truncated-out-' . md5(uniqid('', true));
+            file_put_contents($tmp, $content);
+
+            $tar = new Tar();
+            $tar->open($tmp);
+            try {
+                $this->assertEquals(array(), $tar->extract($out, '', '/truncated/'), $ext);
+            } finally {
+                self::RDelete($out);
+                unlink($tmp);
+            }
+        }
+    }
+
+    /**
      * recursive rmdir()/unlink()
      *
      * @static

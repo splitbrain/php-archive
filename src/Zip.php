@@ -774,16 +774,8 @@ class Zip extends Archive
             // $header['extradata'] is kept as what the central directory provided
         }
 
+        // sizes and CRC are kept from the central directory, the local values may be zero or masked
         $header['compression'] = $data['compression'];
-        foreach (array(
-                     'size',
-                     'compressed_size',
-                     'crc'
-                 ) as $hd) { // On ODT files, these headers are 0. Keep the previous value.
-            if ($data[$hd] != 0) {
-                $header[$hd] = $data[$hd];
-            }
-        }
         $header['flag']  = $data['flag'];
         $header['mtime'] = $this->makeUnixTime($data['mdate'], $data['mtime']);
 
