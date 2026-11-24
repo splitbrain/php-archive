@@ -168,6 +168,23 @@ abstract class Archive
     }
 
     /**
+     * Create a directory for extracted files, including missing parent directories
+     *
+     * @param string $directory the directory to create
+     * @return string the directory path without a trailing slash
+     * @throws ArchiveIOException when the directory cannot be created
+     */
+    protected function createOutputDirectory($directory)
+    {
+        $directory = rtrim($directory, '/');
+        @mkdir($directory, 0777, true);
+        if (!is_dir($directory)) {
+            throw new ArchiveIOException("Could not create directory '$directory'");
+        }
+        return $directory;
+    }
+
+    /**
      * Check that extracting the next entry stays within the configured limits
      *
      * @param string $name the path of the entry, used in the error message

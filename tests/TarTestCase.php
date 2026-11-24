@@ -1083,6 +1083,27 @@ class TarTestCase extends TestCase
     }
 
     /**
+     * A failed extraction must close the archive
+     */
+    public function testExtractClosesArchiveOnException()
+    {
+        $dir = $this->getDir() . '/tar';
+        $out = sys_get_temp_dir() . '/phpa-truncated-out-' . md5(uniqid('', true));
+
+        $tar = new Tar();
+        $tar->open("$dir/truncated.tar");
+        try {
+            $tar->extract($out);
+        } catch (ArchiveCorruptedException $e) {
+            $this->expectException(ArchiveIOException::class);
+            $this->expectExceptionMessage('Can not read from a closed archive');
+            $tar->extract($out);
+        } finally {
+            self::RDelete($out);
+        }
+    }
+
+    /**
      * Skipping an excluded entry with less data than its declared size must stop at the end of the archive.
      */
     public function testTruncatedEntrySkip()

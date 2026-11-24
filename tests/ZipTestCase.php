@@ -282,6 +282,29 @@ class ZipTestCase extends TestCase
     }
 
     /**
+     * A failed extraction must close the archive
+     */
+    public function testExtractClosesArchiveOnException()
+    {
+        $tmp = sys_get_temp_dir() . '/phpa-closed-' . md5(uniqid('', true)) . '.zip';
+        $out = sys_get_temp_dir() . '/phpa-closed-out-' . md5(uniqid('', true));
+        file_put_contents($tmp, $this->craftZip('tiny.txt', 'A', 0, 1048576, 1048576));
+
+        $zip = new Zip();
+        $zip->open($tmp);
+        try {
+            $zip->extract($out);
+        } catch (ArchiveCorruptedException $e) {
+            $this->expectException(ArchiveIOException::class);
+            $this->expectExceptionMessage('Can not read from a closed archive');
+            $zip->extract($out);
+        } finally {
+            self::RDelete($out);
+            unlink($tmp);
+        }
+    }
+
+    /**
      * A deflated entry shorter than its declared uncompressed size must be rejected.
      */
     public function testCompressedEntrySmallerThanDeclaredSize()
@@ -1077,6 +1100,20 @@ class ZipTestCase extends TestCase
 
         $zip->open($file);
         $zip->close();
+        $zip->extract($out);
+    }
+
+    public function testZipExtractWithInvalidOutDir()
+    {
+        $this->expectException(ArchiveIOException::class);
+        $this->expectExceptionMessage('Could not create directory');
+        $dir = $this->getDir() . '/zip';
+        // Fails on Linux and Windows.
+        $out = '/root/invalid_out_dir:';
+
+        $zip = new Zip();
+
+        $zip->open("$dir/test.zip");
         $zip->extract($out);
     }
 
